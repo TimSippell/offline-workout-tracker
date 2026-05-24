@@ -6,6 +6,7 @@
 #include "views/history_view.h"
 #include "views/exercise_view.h"
 #include "views/progress_view.h"
+#include "views/template_view.h"
 #include <format>
 
 namespace tui {
@@ -70,6 +71,7 @@ void App::run() {
             case Screen::Workout:  screen_workout(); break;
             case Screen::History:  screen_history(); break;
             case Screen::Exercises: screen_exercises(); break;
+            case Screen::Templates: screen_templates(); break;
             case Screen::Progress: screen_progress(); break;
             case Screen::Quit: break;
         }
@@ -91,6 +93,7 @@ void App::screen_main_menu() {
 
     Menu menu(main_win_, {
         {"  New Workout", [&]{ next = Screen::Workout; }},
+        {"  Templates",   [&]{ next = Screen::Templates; }},
         {"  History",     [&]{ next = Screen::History; }},
         {"  Exercises",   [&]{ next = Screen::Exercises; }},
         {"  Progress",    [&]{ next = Screen::Progress; }},
@@ -149,6 +152,20 @@ void App::screen_exercises() {
     keypad(main_win_, TRUE);
 
     ExerciseView view(main_win_, repo_);
+    view.run();
+    current_screen_ = Screen::MainMenu;
+}
+
+void App::screen_templates() {
+    draw_header("Templates");
+
+    int max_y = getmaxy(stdscr);
+    int max_x = getmaxx(stdscr);
+    if (main_win_) delwin(main_win_);
+    main_win_ = newwin(max_y - 3, max_x, 2, 0);
+    keypad(main_win_, TRUE);
+
+    TemplateView view(main_win_, repo_);
     view.run();
     current_screen_ = Screen::MainMenu;
 }

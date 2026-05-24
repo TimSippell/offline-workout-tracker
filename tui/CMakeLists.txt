@@ -7,6 +7,7 @@ add_executable(simple-workout-tracker
     views/history_view.cpp
     views/exercise_view.cpp
     views/progress_view.cpp
+    views/template_view.cpp
     widgets/input.cpp
     widgets/table.cpp
     widgets/menu.cpp

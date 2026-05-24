@@ -12,7 +12,7 @@ static sf::Repository* g_repo = nullptr;
 extern "C" {
 
 JNIEXPORT void JNICALL
-Java_com_swt_bridge_SwtBridge_nativeInit(JNIEnv* env, jobject, jstring dbPath) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeInit(JNIEnv* env, jobject, jstring dbPath) {
     const char* path = env->GetStringUTFChars(dbPath, nullptr);
     try {
         g_db = new sf::Database(path);
@@ -25,7 +25,7 @@ Java_com_swt_bridge_SwtBridge_nativeInit(JNIEnv* env, jobject, jstring dbPath) {
 }
 
 JNIEXPORT void JNICALL
-Java_com_swt_bridge_SwtBridge_nativeClose(JNIEnv*, jobject) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeClose(JNIEnv*, jobject) {
     delete g_repo;
     delete g_db;
     g_repo = nullptr;
@@ -35,7 +35,7 @@ Java_com_swt_bridge_SwtBridge_nativeClose(JNIEnv*, jobject) {
 // --- Exercises ---
 
 static jobject makeExercise(JNIEnv* env, const sf::Exercise& ex) {
-    jclass cls = env->FindClass("com/swt/bridge/SwtBridge$Exercise");
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$Exercise");
     jmethodID ctor = env->GetMethodID(cls, "<init>",
         "(JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     return env->NewObject(cls, ctor,
@@ -47,7 +47,7 @@ static jobject makeExercise(JNIEnv* env, const sf::Exercise& ex) {
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_swt_bridge_SwtBridge_nativeAddExercise(JNIEnv* env, jobject,
+Java_com_timsippell_swt_bridge_SwtBridge_nativeAddExercise(JNIEnv* env, jobject,
         jstring name, jstring category, jstring muscleGroup, jstring notes) {
     if (!g_repo) return -1;
     sf::Exercise ex;
@@ -59,13 +59,13 @@ Java_com_swt_bridge_SwtBridge_nativeAddExercise(JNIEnv* env, jobject,
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_swt_bridge_SwtBridge_nativeListExercises(JNIEnv* env, jobject, jstring filter) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeListExercises(JNIEnv* env, jobject, jstring filter) {
     if (!g_repo) return nullptr;
     const char* f = env->GetStringUTFChars(filter, nullptr);
     auto exercises = g_repo->list_exercises(f);
     env->ReleaseStringUTFChars(filter, f);
 
-    jclass cls = env->FindClass("com/swt/bridge/SwtBridge$Exercise");
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$Exercise");
     jobjectArray arr = env->NewObjectArray(exercises.size(), cls, nullptr);
     for (size_t i = 0; i < exercises.size(); i++) {
         env->SetObjectArrayElement(arr, i, makeExercise(env, exercises[i]));
@@ -74,14 +74,14 @@ Java_com_swt_bridge_SwtBridge_nativeListExercises(JNIEnv* env, jobject, jstring 
 }
 
 JNIEXPORT void JNICALL
-Java_com_swt_bridge_SwtBridge_nativeDeleteExercise(JNIEnv*, jobject, jlong id) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeDeleteExercise(JNIEnv*, jobject, jlong id) {
     if (g_repo) g_repo->delete_exercise(id);
 }
 
 // --- Workouts ---
 
 JNIEXPORT jlong JNICALL
-Java_com_swt_bridge_SwtBridge_nativeStartWorkout(JNIEnv* env, jobject, jstring name) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeStartWorkout(JNIEnv* env, jobject, jstring name) {
     if (!g_repo) return -1;
     const char* n = env->GetStringUTFChars(name, nullptr);
     auto id = g_repo->start_workout(n);
@@ -90,12 +90,12 @@ Java_com_swt_bridge_SwtBridge_nativeStartWorkout(JNIEnv* env, jobject, jstring n
 }
 
 JNIEXPORT void JNICALL
-Java_com_swt_bridge_SwtBridge_nativeFinishWorkout(JNIEnv*, jobject, jlong id) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeFinishWorkout(JNIEnv*, jobject, jlong id) {
     if (g_repo) g_repo->finish_workout(id);
 }
 
 static jobject makeWorkout(JNIEnv* env, const sf::Workout& w) {
-    jclass cls = env->FindClass("com/swt/bridge/SwtBridge$Workout");
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$Workout");
     jmethodID ctor = env->GetMethodID(cls, "<init>",
         "(JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
     return env->NewObject(cls, ctor,
@@ -108,11 +108,11 @@ static jobject makeWorkout(JNIEnv* env, const sf::Workout& w) {
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_swt_bridge_SwtBridge_nativeListWorkouts(JNIEnv* env, jobject, jint limit, jint offset) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeListWorkouts(JNIEnv* env, jobject, jint limit, jint offset) {
     if (!g_repo) return nullptr;
     auto workouts = g_repo->list_workouts(limit, offset);
 
-    jclass cls = env->FindClass("com/swt/bridge/SwtBridge$Workout");
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$Workout");
     jobjectArray arr = env->NewObjectArray(workouts.size(), cls, nullptr);
     for (size_t i = 0; i < workouts.size(); i++) {
         env->SetObjectArrayElement(arr, i, makeWorkout(env, workouts[i]));
@@ -121,14 +121,14 @@ Java_com_swt_bridge_SwtBridge_nativeListWorkouts(JNIEnv* env, jobject, jint limi
 }
 
 JNIEXPORT void JNICALL
-Java_com_swt_bridge_SwtBridge_nativeDeleteWorkout(JNIEnv*, jobject, jlong id) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeDeleteWorkout(JNIEnv*, jobject, jlong id) {
     if (g_repo) g_repo->delete_workout(id);
 }
 
 // --- Sets ---
 
 JNIEXPORT jlong JNICALL
-Java_com_swt_bridge_SwtBridge_nativeAddSet(JNIEnv*, jobject,
+Java_com_timsippell_swt_bridge_SwtBridge_nativeAddSet(JNIEnv*, jobject,
         jlong workoutId, jlong exerciseId, jint order, jint reps, jdouble weight, jdouble rpe) {
     if (!g_repo) return -1;
     sf::WorkoutSet s;
@@ -142,7 +142,7 @@ Java_com_swt_bridge_SwtBridge_nativeAddSet(JNIEnv*, jobject,
 }
 
 static jobject makeWorkoutSet(JNIEnv* env, const sf::WorkoutSet& s) {
-    jclass cls = env->FindClass("com/swt/bridge/SwtBridge$WorkoutSet");
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$WorkoutSet");
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(JJJIIDD)V");
     return env->NewObject(cls, ctor,
         (jlong)s.id, (jlong)s.workout_id, (jlong)s.exercise_id,
@@ -151,11 +151,11 @@ static jobject makeWorkoutSet(JNIEnv* env, const sf::WorkoutSet& s) {
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_swt_bridge_SwtBridge_nativeGetSetsForWorkout(JNIEnv* env, jobject, jlong workoutId) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeGetSetsForWorkout(JNIEnv* env, jobject, jlong workoutId) {
     if (!g_repo) return nullptr;
     auto sets = g_repo->get_sets_for_workout(workoutId);
 
-    jclass cls = env->FindClass("com/swt/bridge/SwtBridge$WorkoutSet");
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$WorkoutSet");
     jobjectArray arr = env->NewObjectArray(sets.size(), cls, nullptr);
     for (size_t i = 0; i < sets.size(); i++) {
         env->SetObjectArrayElement(arr, i, makeWorkoutSet(env, sets[i]));
@@ -164,19 +164,19 @@ Java_com_swt_bridge_SwtBridge_nativeGetSetsForWorkout(JNIEnv* env, jobject, jlon
 }
 
 JNIEXPORT void JNICALL
-Java_com_swt_bridge_SwtBridge_nativeDeleteSet(JNIEnv*, jobject, jlong id) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeDeleteSet(JNIEnv*, jobject, jlong id) {
     if (g_repo) g_repo->delete_set(id);
 }
 
 // --- Stats ---
 
 JNIEXPORT jobject JNICALL
-Java_com_swt_bridge_SwtBridge_nativeGetStats(JNIEnv* env, jobject, jlong exerciseId) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeGetStats(JNIEnv* env, jobject, jlong exerciseId) {
     if (!g_repo) return nullptr;
     auto sets = g_repo->get_sets_for_exercise(exerciseId);
     auto stats = sf::compute_stats(exerciseId, sets);
 
-    jclass cls = env->FindClass("com/swt/bridge/SwtBridge$ExerciseStats");
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$ExerciseStats");
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(JDDDI)V");
     return env->NewObject(cls, ctor,
         (jlong)stats.exercise_id,
@@ -185,11 +185,11 @@ Java_com_swt_bridge_SwtBridge_nativeGetStats(JNIEnv* env, jobject, jlong exercis
 }
 
 JNIEXPORT jobjectArray JNICALL
-Java_com_swt_bridge_SwtBridge_nativeGetProgression(JNIEnv* env, jobject, jlong exerciseId, jint sessions) {
+Java_com_timsippell_swt_bridge_SwtBridge_nativeGetProgression(JNIEnv* env, jobject, jlong exerciseId, jint sessions) {
     if (!g_repo) return nullptr;
     auto points = g_repo->get_progression(exerciseId, sessions);
 
-    jclass cls = env->FindClass("com/swt/bridge/SwtBridge$ProgressionPoint");
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$ProgressionPoint");
     jmethodID ctor = env->GetMethodID(cls, "<init>", "(Ljava/lang/String;DDD)V");
     jobjectArray arr = env->NewObjectArray(points.size(), cls, nullptr);
     for (size_t i = 0; i < points.size(); i++) {
@@ -199,6 +199,135 @@ Java_com_swt_bridge_SwtBridge_nativeGetProgression(JNIEnv* env, jobject, jlong e
         env->SetObjectArrayElement(arr, i, obj);
     }
     return arr;
+}
+
+// --- Templates ---
+
+static jobject makeWorkoutTemplate(JNIEnv* env, const sf::WorkoutTemplate& t) {
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$WorkoutTemplate");
+    jmethodID ctor = env->GetMethodID(cls, "<init>",
+        "(JLjava/lang/String;Ljava/lang/String;I)V");
+    return env->NewObject(cls, ctor,
+        (jlong)t.id,
+        env->NewStringUTF(t.name.c_str()),
+        env->NewStringUTF(t.notes.c_str()),
+        (jint)t.sets.size());
+}
+
+static jobject makeTemplateSet(JNIEnv* env, const sf::TemplateSet& s) {
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$TemplateSet");
+    jmethodID ctor = env->GetMethodID(cls, "<init>", "(JJJIIDD)V");
+    return env->NewObject(cls, ctor,
+        (jlong)s.id, (jlong)s.template_id, (jlong)s.exercise_id,
+        (jint)s.set_order, (jint)s.reps.value_or(0),
+        (jdouble)s.weight.value_or(0.0), (jdouble)s.rpe.value_or(0.0));
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeCreateTemplate(JNIEnv* env, jobject,
+        jstring name, jstring notes) {
+    if (!g_repo) return -1;
+    sf::WorkoutTemplate t;
+    const char* n = env->GetStringUTFChars(name, nullptr);
+    const char* nt = env->GetStringUTFChars(notes, nullptr);
+    t.name = n;
+    t.notes = nt;
+    env->ReleaseStringUTFChars(name, n);
+    env->ReleaseStringUTFChars(notes, nt);
+    return g_repo->create_template(t);
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeListTemplates(JNIEnv* env, jobject) {
+    if (!g_repo) return nullptr;
+    auto templates = g_repo->list_templates();
+
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$WorkoutTemplate");
+    jobjectArray arr = env->NewObjectArray(templates.size(), cls, nullptr);
+    for (size_t i = 0; i < templates.size(); i++) {
+        env->SetObjectArrayElement(arr, i, makeWorkoutTemplate(env, templates[i]));
+    }
+    return arr;
+}
+
+JNIEXPORT jobjectArray JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeGetTemplateSets(JNIEnv* env, jobject, jlong templateId) {
+    if (!g_repo) return nullptr;
+    auto sets = g_repo->get_template_sets(templateId);
+
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$TemplateSet");
+    jobjectArray arr = env->NewObjectArray(sets.size(), cls, nullptr);
+    for (size_t i = 0; i < sets.size(); i++) {
+        env->SetObjectArrayElement(arr, i, makeTemplateSet(env, sets[i]));
+    }
+    return arr;
+}
+
+JNIEXPORT void JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeDeleteTemplate(JNIEnv*, jobject, jlong id) {
+    if (g_repo) g_repo->delete_template(id);
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeAddTemplateSet(JNIEnv*, jobject,
+        jlong templateId, jlong exerciseId, jint order, jint reps, jdouble weight, jdouble rpe) {
+    if (!g_repo) return -1;
+    sf::TemplateSet s;
+    s.template_id = templateId;
+    s.exercise_id = exerciseId;
+    s.set_order = order;
+    if (reps > 0) s.reps = reps;
+    if (weight > 0) s.weight = weight;
+    if (rpe > 0) s.rpe = rpe;
+    return g_repo->add_template_set(s);
+}
+
+JNIEXPORT void JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeDeleteTemplateSet(JNIEnv*, jobject, jlong id) {
+    if (g_repo) g_repo->delete_template_set(id);
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeStartWorkoutFromTemplate(JNIEnv* env, jobject,
+        jlong templateId, jstring name) {
+    if (!g_repo) return -1;
+    const char* n = env->GetStringUTFChars(name, nullptr);
+    auto id = g_repo->start_workout_from_template(templateId, n);
+    env->ReleaseStringUTFChars(name, n);
+    return id;
+}
+
+JNIEXPORT void JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeUpdateSet(JNIEnv*, jobject,
+        jlong id, jint reps, jdouble weight, jdouble rpe) {
+    if (!g_repo) return;
+    sf::WorkoutSet s;
+    s.id = id;
+    if (reps > 0) s.reps = reps;
+    if (weight > 0) s.weight = weight;
+    if (rpe > 0) s.rpe = rpe;
+    g_repo->update_set(s);
+}
+
+JNIEXPORT void JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeUpdateExercise(JNIEnv* env, jobject,
+        jlong id, jstring name, jstring category, jstring muscleGroup, jstring notes) {
+    if (!g_repo) return;
+    const char* n = env->GetStringUTFChars(name, nullptr);
+    const char* c = env->GetStringUTFChars(category, nullptr);
+    const char* m = env->GetStringUTFChars(muscleGroup, nullptr);
+    const char* nt = env->GetStringUTFChars(notes, nullptr);
+    sf::Exercise ex;
+    ex.id = id;
+    ex.name = n;
+    ex.category = c;
+    ex.muscle_group = m;
+    ex.notes = nt;
+    g_repo->update_exercise(ex);
+    env->ReleaseStringUTFChars(name, n);
+    env->ReleaseStringUTFChars(category, c);
+    env->ReleaseStringUTFChars(muscleGroup, m);
+    env->ReleaseStringUTFChars(notes, nt);
 }
 
 } // extern "C"

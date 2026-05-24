@@ -35,6 +35,22 @@ public:
     std::vector<WorkoutSet> get_sets_for_workout(int64_t workout_id);
     std::vector<WorkoutSet> get_sets_for_exercise(int64_t exercise_id, int limit = 100);
 
+    // Templates
+    int64_t create_template(const WorkoutTemplate& t);
+    std::optional<WorkoutTemplate> get_template(int64_t id);
+    std::vector<WorkoutTemplate> list_templates();
+    void update_template(const WorkoutTemplate& t);
+    void delete_template(int64_t id);
+
+    // Template sets
+    int64_t add_template_set(const TemplateSet& s);
+    void update_template_set(const TemplateSet& s);
+    void delete_template_set(int64_t id);
+    std::vector<TemplateSet> get_template_sets(int64_t template_id);
+
+    // Start workout from template
+    int64_t start_workout_from_template(int64_t template_id, const std::string& name = "");
+
     // History
     std::vector<ProgressionPoint> get_progression(int64_t exercise_id, int last_n_sessions = 20);
 

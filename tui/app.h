@@ -10,6 +10,7 @@ enum class Screen {
     Workout,
     History,
     Exercises,
+    Templates,
     Progress,
     Quit,
 };
@@ -31,6 +32,7 @@ private:
     void screen_workout();
     void screen_history();
     void screen_exercises();
+    void screen_templates();
     void screen_progress();
 
     sf::Repository repo_;

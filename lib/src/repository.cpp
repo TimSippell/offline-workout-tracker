@@ -332,6 +332,186 @@ std::vector<WorkoutSet> Repository::get_sets_for_exercise(int64_t exercise_id, i
     return result;
 }
 
+// --- Templates ---
+
+int64_t Repository::create_template(const WorkoutTemplate& t) {
+    const char* sql = "INSERT INTO workout_template (name, notes) VALUES (?, ?)";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+
+    sqlite3_bind_text(raw, 1, t.name.c_str(), -1, SQLITE_TRANSIENT);
+    bind_text(raw, 2, t.notes);
+
+    if (sqlite3_step(raw) != SQLITE_DONE)
+        throw std::runtime_error(std::string("create_template: ") + sqlite3_errmsg(db_.handle()));
+
+    return sqlite3_last_insert_rowid(db_.handle());
+}
+
+std::optional<WorkoutTemplate> Repository::get_template(int64_t id) {
+    const char* sql = "SELECT id, name, notes FROM workout_template WHERE id = ?";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+    sqlite3_bind_int64(raw, 1, id);
+
+    if (sqlite3_step(raw) != SQLITE_ROW) return std::nullopt;
+
+    WorkoutTemplate t;
+    t.id = sqlite3_column_int64(raw, 0);
+    t.name = col_text(raw, 1);
+    t.notes = col_text(raw, 2);
+    t.sets = get_template_sets(id);
+    return t;
+}
+
+std::vector<WorkoutTemplate> Repository::list_templates() {
+    const char* sql = "SELECT id, name, notes FROM workout_template ORDER BY name";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+
+    std::vector<WorkoutTemplate> result;
+    while (sqlite3_step(raw) == SQLITE_ROW) {
+        WorkoutTemplate t;
+        t.id = sqlite3_column_int64(raw, 0);
+        t.name = col_text(raw, 1);
+        t.notes = col_text(raw, 2);
+        result.push_back(std::move(t));
+    }
+    return result;
+}
+
+void Repository::update_template(const WorkoutTemplate& t) {
+    const char* sql = "UPDATE workout_template SET name=?, notes=? WHERE id=?";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+    sqlite3_bind_text(raw, 1, t.name.c_str(), -1, SQLITE_TRANSIENT);
+    bind_text(raw, 2, t.notes);
+    sqlite3_bind_int64(raw, 3, t.id);
+    sqlite3_step(raw);
+}
+
+void Repository::delete_template(int64_t id) {
+    const char* sql = "DELETE FROM workout_template WHERE id=?";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+    sqlite3_bind_int64(raw, 1, id);
+    sqlite3_step(raw);
+}
+
+// --- Template Sets ---
+
+int64_t Repository::add_template_set(const TemplateSet& s) {
+    const char* sql = "INSERT INTO template_set (template_id, exercise_id, set_order, reps, weight, rpe, rest_secs, tempo, notes) VALUES (?,?,?,?,?,?,?,?,?)";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+
+    sqlite3_bind_int64(raw, 1, s.template_id);
+    sqlite3_bind_int64(raw, 2, s.exercise_id);
+    sqlite3_bind_int(raw, 3, s.set_order);
+    bind_optional_int(raw, 4, s.reps);
+    bind_optional_double(raw, 5, s.weight);
+    bind_optional_double(raw, 6, s.rpe);
+    bind_optional_int(raw, 7, s.rest_secs);
+    bind_text(raw, 8, s.tempo);
+    bind_text(raw, 9, s.notes);
+
+    if (sqlite3_step(raw) != SQLITE_DONE)
+        throw std::runtime_error(std::string("add_template_set: ") + sqlite3_errmsg(db_.handle()));
+
+    return sqlite3_last_insert_rowid(db_.handle());
+}
+
+void Repository::update_template_set(const TemplateSet& s) {
+    const char* sql = "UPDATE template_set SET exercise_id=?, set_order=?, reps=?, rpe=?, rest_secs=?, tempo=?, notes=? WHERE id=?";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+
+    sqlite3_bind_int64(raw, 1, s.exercise_id);
+    sqlite3_bind_int(raw, 2, s.set_order);
+    bind_optional_int(raw, 3, s.reps);
+    bind_optional_double(raw, 4, s.rpe);
+    bind_optional_int(raw, 5, s.rest_secs);
+    bind_text(raw, 6, s.tempo);
+    bind_text(raw, 7, s.notes);
+    sqlite3_bind_int64(raw, 8, s.id);
+    sqlite3_step(raw);
+}
+
+void Repository::delete_template_set(int64_t id) {
+    const char* sql = "DELETE FROM template_set WHERE id=?";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+    sqlite3_bind_int64(raw, 1, id);
+    sqlite3_step(raw);
+}
+
+std::vector<TemplateSet> Repository::get_template_sets(int64_t template_id) {
+    const char* sql = "SELECT id, template_id, exercise_id, set_order, reps, weight, rpe, rest_secs, tempo, notes FROM template_set WHERE template_id=? ORDER BY set_order";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+    sqlite3_bind_int64(raw, 1, template_id);
+
+    std::vector<TemplateSet> result;
+    while (sqlite3_step(raw) == SQLITE_ROW) {
+        TemplateSet s;
+        s.id = sqlite3_column_int64(raw, 0);
+        s.template_id = sqlite3_column_int64(raw, 1);
+        s.exercise_id = sqlite3_column_int64(raw, 2);
+        s.set_order = sqlite3_column_int(raw, 3);
+        s.reps = col_optional_int(raw, 4);
+        s.weight = col_optional_double(raw, 5);
+        s.rpe = col_optional_double(raw, 6);
+        s.rest_secs = col_optional_int(raw, 7);
+        s.tempo = col_text(raw, 8);
+        s.notes = col_text(raw, 9);
+        result.push_back(std::move(s));
+    }
+    return result;
+}
+
+int64_t Repository::start_workout_from_template(int64_t template_id, const std::string& name) {
+    auto tmpl = get_template(template_id);
+    if (!tmpl) throw std::runtime_error("Template not found");
+
+    std::string workout_name = name.empty() ? tmpl->name : name;
+    int64_t workout_id = start_workout(workout_name);
+
+    {
+        const char* sql = "UPDATE workout SET template_id = ? WHERE id = ?";
+        sqlite3_stmt* raw = nullptr;
+        sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+        StmtGuard stmt{raw};
+        sqlite3_bind_int64(raw, 1, template_id);
+        sqlite3_bind_int64(raw, 2, workout_id);
+        sqlite3_step(raw);
+    }
+
+    for (const auto& ts : tmpl->sets) {
+        WorkoutSet ws;
+        ws.workout_id = workout_id;
+        ws.exercise_id = ts.exercise_id;
+        ws.set_order = ts.set_order;
+        ws.reps = ts.reps;
+        ws.weight = ts.weight;
+        ws.rpe = ts.rpe;
+        ws.rest_secs = ts.rest_secs;
+        ws.tempo = ts.tempo;
+        ws.notes = ts.notes;
+        add_set(ws);
+    }
+
+    return workout_id;
+}
+
 std::vector<ProgressionPoint> Repository::get_progression(int64_t exercise_id, int last_n_sessions) {
     const char* sql = R"(
         SELECT date(w.started_at) as session_date,

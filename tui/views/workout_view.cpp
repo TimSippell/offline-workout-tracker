@@ -1,6 +1,5 @@
 #include "workout_view.h"
 #include "../widgets/input.h"
-#include "../widgets/menu.h"
 #include <swt/calculator.h>
 #include <format>
 
@@ -9,9 +8,55 @@ namespace tui {
 WorkoutView::WorkoutView(WINDOW* win, sf::Repository& repo)
     : win_(win), repo_(repo) {}
 
-void WorkoutView::run() {
-    std::string name = get_string_input(win_, 1, 2, "Workout name (optional): ");
+bool WorkoutView::choose_start_mode() {
+    werase(win_);
+    box(win_, 0, 0);
+    mvwprintw(win_, 1, 2, "Start Workout");
+    mvwprintw(win_, 3, 2, "1) Start blank workout");
+    mvwprintw(win_, 4, 2, "2) Start from template");
+    mvwprintw(win_, 5, 2, "q) Cancel");
+    wrefresh(win_);
+
+    int ch = wgetch(win_);
+    if (ch == 'q') return false;
+
+    if (ch == '2') {
+        auto templates = repo_.list_templates();
+        if (templates.empty()) {
+            mvwprintw(win_, 7, 2, "No templates. Create one first.");
+            mvwprintw(win_, 8, 2, "Press any key...");
+            wrefresh(win_);
+            wgetch(win_);
+            return false;
+        }
+
+        werase(win_);
+        box(win_, 0, 0);
+        mvwprintw(win_, 1, 2, "Choose Template:");
+        int row = 3;
+        for (int i = 0; i < static_cast<int>(templates.size()) && row < getmaxy(win_) - 4; i++) {
+            auto sets = repo_.get_template_sets(templates[i].id);
+            mvwprintw(win_, row++, 2, "%d) %s (%d sets)",
+                      i + 1, templates[i].name.c_str(), static_cast<int>(sets.size()));
+        }
+        wrefresh(win_);
+
+        auto pick = get_int_input(win_, row + 1, 2, "Pick #: ");
+        if (!pick || *pick < 1 || *pick > static_cast<int>(templates.size())) return false;
+
+        workout_id_ = repo_.start_workout_from_template(templates[*pick - 1].id);
+        auto sets = repo_.get_sets_for_workout(workout_id_);
+        set_count_ = static_cast<int>(sets.size());
+        return true;
+    }
+
+    std::string name = get_string_input(win_, 7, 2, "Workout name (optional): ");
     workout_id_ = repo_.start_workout(name);
+    return true;
+}
+
+void WorkoutView::run() {
+    if (!choose_start_mode()) return;
 
     bool running = true;
     while (running) {
@@ -30,13 +75,27 @@ void WorkoutView::run() {
         show_sets();
 
         int max_y = getmaxy(win_);
-        mvwprintw(win_, max_y - 2, 2, "a:add set | e:exercise | f:finish | q:cancel");
+        mvwprintw(win_, max_y - 2, 2, "a:add set | w:edit weight | e:exercise | f:finish | q:cancel");
         wrefresh(win_);
 
         int ch = wgetch(win_);
         switch (ch) {
             case 'e': select_exercise(); break;
             case 'a': add_set(); break;
+            case 'w': {
+                auto sets = repo_.get_sets_for_workout(workout_id_);
+                if (!sets.empty()) {
+                    werase(win_);
+                    box(win_, 0, 0);
+                    mvwprintw(win_, 1, 2, "Enter set # to edit weight:");
+                    wrefresh(win_);
+                    auto pick = get_int_input(win_, 2, 2, "Set #: ");
+                    if (pick && *pick >= 1 && *pick <= static_cast<int>(sets.size())) {
+                        edit_set_weight(sets[*pick - 1].id);
+                    }
+                }
+                break;
+            }
             case 'f':
                 repo_.finish_workout(workout_id_);
                 running = false;
@@ -103,6 +162,25 @@ void WorkoutView::add_set() {
     }
 }
 
+void WorkoutView::edit_set_weight(int64_t set_id) {
+    werase(win_);
+    box(win_, 0, 0);
+    mvwprintw(win_, 1, 2, "Edit Set Weight");
+
+    auto weight = get_double_input(win_, 3, 2, "Weight: ");
+    auto rpe = get_double_input(win_, 4, 2, "RPE (blank to skip): ");
+
+    auto sets = repo_.get_sets_for_workout(workout_id_);
+    for (auto& s : sets) {
+        if (s.id == set_id) {
+            if (weight) s.weight = weight;
+            if (rpe) s.rpe = rpe;
+            repo_.update_set(s);
+            break;
+        }
+    }
+}
+
 void WorkoutView::show_sets() {
     auto sets = repo_.get_sets_for_workout(workout_id_);
     if (sets.empty()) return;
@@ -116,7 +194,7 @@ void WorkoutView::show_sets() {
         if (ex_name.size() > 20) ex_name.resize(20);
 
         std::string reps_s = s.reps ? std::to_string(*s.reps) : "-";
-        std::string wt_s = s.weight ? std::format("{:.1f}", *s.weight) : "-";
+        std::string wt_s = s.weight ? std::format("{:.1f}", *s.weight) : "---";
         std::string rpe_s = s.rpe ? std::format("{:.0f}", *s.rpe) : "-";
         std::string e1rm_s = "-";
         if (s.weight && s.reps && *s.reps > 0 && *s.weight > 0) {

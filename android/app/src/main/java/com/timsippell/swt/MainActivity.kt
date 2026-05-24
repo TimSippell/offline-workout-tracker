@@ -1,11 +1,11 @@
-package com.swt
+package com.timsippell.swt
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.swt.bridge.SwtBridge
-import com.swt.ui.SwtApp
+import com.timsippell.swt.bridge.SwtBridge
+import com.timsippell.swt.ui.SwtApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

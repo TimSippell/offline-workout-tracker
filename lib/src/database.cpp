@@ -54,6 +54,27 @@ void Database::migrate() {
 
         CREATE INDEX IF NOT EXISTS idx_set_workout ON workout_set(workout_id);
         CREATE INDEX IF NOT EXISTS idx_set_exercise ON workout_set(exercise_id);
+
+        CREATE TABLE IF NOT EXISTS workout_template (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            name        TEXT NOT NULL,
+            notes       TEXT,
+            created_at  TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS template_set (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            template_id INTEGER NOT NULL REFERENCES workout_template(id) ON DELETE CASCADE,
+            exercise_id INTEGER NOT NULL REFERENCES exercise(id),
+            set_order   INTEGER NOT NULL,
+            reps        INTEGER,
+            rpe         REAL,
+            rest_secs   INTEGER,
+            tempo       TEXT,
+            notes       TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_tset_template ON template_set(template_id);
     )";
 
     char* err = nullptr;
@@ -63,6 +84,11 @@ void Database::migrate() {
         sqlite3_free(err);
         throw std::runtime_error("Migration failed: " + msg);
     }
+
+    sqlite3_exec(db_, "ALTER TABLE workout ADD COLUMN template_id INTEGER REFERENCES workout_template(id)",
+                 nullptr, nullptr, nullptr);
+    sqlite3_exec(db_, "ALTER TABLE template_set ADD COLUMN weight REAL",
+                 nullptr, nullptr, nullptr);
 }
 
 } // namespace sf

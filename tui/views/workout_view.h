@@ -12,8 +12,10 @@ public:
     void run();
 
 private:
+    bool choose_start_mode();
     void select_exercise();
     void add_set();
+    void edit_set_weight(int64_t set_id);
     void show_sets();
     void show_previous_performance(int64_t exercise_id);
 

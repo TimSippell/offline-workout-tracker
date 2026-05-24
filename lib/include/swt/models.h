@@ -53,4 +53,24 @@ struct ProgressionPoint {
     double session_volume = 0.0;
 };
 
+struct TemplateSet {
+    int64_t id = 0;
+    int64_t template_id = 0;
+    int64_t exercise_id = 0;
+    int set_order = 0;
+    std::optional<int> reps;
+    std::optional<double> weight;
+    std::optional<double> rpe;
+    std::optional<int> rest_secs;
+    std::string tempo;
+    std::string notes;
+};
+
+struct WorkoutTemplate {
+    int64_t id = 0;
+    std::string name;
+    std::string notes;
+    std::vector<TemplateSet> sets;
+};
+
 } // namespace sf

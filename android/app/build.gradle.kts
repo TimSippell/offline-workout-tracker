@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.swt"
+    namespace = "com.timsippell.swt"
     compileSdk = 35
 
     signingConfigs {
@@ -18,7 +18,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.swt"
+        applicationId = "com.timsippell.swt"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
