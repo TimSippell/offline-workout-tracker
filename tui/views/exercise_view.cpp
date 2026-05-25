@@ -10,7 +10,7 @@ ExerciseView::ExerciseView(WINDOW* win, sf::Repository& repo)
     : win_(win), repo_(repo) {}
 
 void ExerciseView::run() {
-    int selected = 0;
+    Table table(win_, {"Name", "Category", "Muscle Group"}, {25, 15, 15});
     bool running = true;
 
     while (running) {
@@ -22,12 +22,13 @@ void ExerciseView::run() {
         if (exercises.empty()) {
             mvwprintw(win_, 2, 2, "No exercises yet. Press 'a' to add one.");
         } else {
-            Table table(win_, {"Name", "Category", "Muscle Group"}, {25, 15, 15});
+            int prev_selected = table.selected();
             std::vector<std::vector<std::string>> rows;
             for (const auto& ex : exercises) {
                 rows.push_back({ex.name, ex.category.empty() ? "-" : ex.category, ex.muscle_group.empty() ? "-" : ex.muscle_group});
             }
             table.set_rows(std::move(rows));
+            table.set_selected(std::min(prev_selected, static_cast<int>(exercises.size()) - 1));
             table.draw();
         }
 
@@ -35,26 +36,22 @@ void ExerciseView::run() {
         wrefresh(win_);
 
         int ch = wgetch(win_);
-        auto exercises_now = repo_.list_exercises();
 
         switch (ch) {
             case 'q': running = false; break;
             case 'a': add_exercise(); break;
             case 'd':
-                if (!exercises_now.empty() && selected < static_cast<int>(exercises_now.size())) {
-                    repo_.delete_exercise(exercises_now[selected].id);
+                if (!exercises.empty() && table.selected() < static_cast<int>(exercises.size())) {
+                    repo_.delete_exercise(exercises[table.selected()].id);
                 }
                 break;
             case '\n': case KEY_ENTER:
-                if (!exercises_now.empty() && selected < static_cast<int>(exercises_now.size())) {
-                    show_exercise_detail(exercises_now[selected].id);
+                if (!exercises.empty() && table.selected() < static_cast<int>(exercises.size())) {
+                    show_exercise_detail(exercises[table.selected()].id);
                 }
                 break;
-            case 'j': case KEY_DOWN:
-                if (selected < static_cast<int>(exercises_now.size()) - 1) selected++;
-                break;
-            case 'k': case KEY_UP:
-                if (selected > 0) selected--;
+            default:
+                table.handle_input(ch);
                 break;
         }
     }

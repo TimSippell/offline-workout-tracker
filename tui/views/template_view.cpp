@@ -21,8 +21,10 @@ void TemplateView::run() {
         if (templates.empty()) {
             mvwprintw(win_, 2, 2, "No templates yet. Press 'a' to create one.");
         } else {
+            int max_row = getmaxy(win_) - 3;
             int row = 2;
-            for (int i = 0; i < static_cast<int>(templates.size()); i++) {
+            int scroll = std::max(0, selected - (max_row - 2));
+            for (int i = scroll; i < static_cast<int>(templates.size()) && row < max_row; i++) {
                 if (i == selected) wattron(win_, A_REVERSE);
                 auto sets = repo_.get_template_sets(templates[i].id);
                 mvwprintw(win_, row++, 2, "%-30s  %d sets",

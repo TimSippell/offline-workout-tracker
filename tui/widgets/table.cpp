@@ -8,8 +8,17 @@ Table::Table(WINDOW* win, std::vector<std::string> headers, std::vector<int> col
 
 void Table::set_rows(std::vector<std::vector<std::string>> rows) {
     rows_ = std::move(rows);
-    selected_ = 0;
-    scroll_offset_ = 0;
+}
+
+void Table::set_selected(int idx) {
+    selected_ = std::clamp(idx, 0, std::max(0, static_cast<int>(rows_.size()) - 1));
+
+    int max_y = getmaxy(win_);
+    int visible = max_y - 4;
+    if (selected_ < scroll_offset_)
+        scroll_offset_ = selected_;
+    else if (selected_ >= scroll_offset_ + visible)
+        scroll_offset_ = selected_ - visible + 1;
 }
 
 void Table::draw() {
@@ -25,7 +34,7 @@ void Table::draw() {
     }
     wattroff(win_, A_BOLD);
 
-    int visible = max_y - 3;
+    int visible = max_y - 4;
     for (int i = 0; i < visible && (i + scroll_offset_) < static_cast<int>(rows_.size()); ++i) {
         int row_idx = i + scroll_offset_;
         if (row_idx == selected_) wattron(win_, A_REVERSE);
@@ -48,7 +57,7 @@ void Table::handle_input(int ch) {
     int max_y, max_x;
     getmaxyx(win_, max_y, max_x);
     (void)max_x;
-    int visible = max_y - 3;
+    int visible = max_y - 4;
 
     switch (ch) {
         case KEY_UP:

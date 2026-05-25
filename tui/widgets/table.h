@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ncurses.h>
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,7 @@ public:
     void draw();
     void handle_input(int ch);
     int selected() const { return selected_; }
+    void set_selected(int idx);
     bool empty() const { return rows_.empty(); }
 
 private:

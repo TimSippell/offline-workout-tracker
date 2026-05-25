@@ -28,6 +28,7 @@ private:
     void draw_header(const std::string& title);
     void draw_footer(const std::string& hint);
 
+    void prompt_seed();
     void screen_main_menu();
     void screen_workout();
     void screen_history();

@@ -31,11 +31,12 @@ void ProgressView::run() {
 
         mvwprintw(win_, 1, 2, "Select exercise to view progress:");
 
-        for (int i = 0; i < static_cast<int>(exercises.size()); ++i) {
+        int visible = getmaxy(win_) - 6;
+        int scroll = std::max(0, selected - visible + 1);
+        for (int i = scroll; i < static_cast<int>(exercises.size()) && (i - scroll) < visible; ++i) {
             if (i == selected) wattron(win_, A_REVERSE);
-            mvwprintw(win_, i + 3, 4, "%-30s", exercises[i].name.c_str());
+            mvwprintw(win_, (i - scroll) + 3, 4, "%-30s", exercises[i].name.c_str());
             if (i == selected) wattroff(win_, A_REVERSE);
-            if (i + 3 >= getmaxy(win_) - 3) break;
         }
 
         mvwprintw(win_, getmaxy(win_) - 2, 2, "j/k:navigate | Enter:view | q:back");

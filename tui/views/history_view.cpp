@@ -8,7 +8,9 @@ HistoryView::HistoryView(WINDOW* win, sf::Repository& repo)
     : win_(win), repo_(repo) {}
 
 void HistoryView::run() {
+    Table table(win_, {"Date", "Name", "Status"}, {20, 25, 10});
     bool running = true;
+
     while (running) {
         werase(win_);
         box(win_, 0, 0);
@@ -23,13 +25,14 @@ void HistoryView::run() {
             return;
         }
 
-        Table table(win_, {"Date", "Name", "Status"}, {20, 25, 10});
+        int prev_selected = table.selected();
         std::vector<std::vector<std::string>> rows;
         for (const auto& w : workouts) {
             std::string status = w.finished_at.empty() ? "active" : "done";
             rows.push_back({w.started_at, w.name.empty() ? "(unnamed)" : w.name, status});
         }
         table.set_rows(std::move(rows));
+        table.set_selected(std::min(prev_selected, static_cast<int>(workouts.size()) - 1));
 
         mvwprintw(win_, getmaxy(win_) - 2, 2, "j/k:navigate | Enter:detail | q:back");
         table.draw();
@@ -37,12 +40,13 @@ void HistoryView::run() {
         int ch = wgetch(win_);
         switch (ch) {
             case 'q': running = false; break;
-            case 'j': case KEY_DOWN: table.handle_input(ch); break;
-            case 'k': case KEY_UP: table.handle_input(ch); break;
             case '\n': case KEY_ENTER:
                 if (!workouts.empty()) {
                     show_workout_detail(workouts[table.selected()].id);
                 }
+                break;
+            default:
+                table.handle_input(ch);
                 break;
         }
     }

@@ -7,6 +7,7 @@
 #include "views/exercise_view.h"
 #include "views/progress_view.h"
 #include "views/template_view.h"
+#include <swt/defaults.h>
 #include <format>
 
 namespace tui {
@@ -60,8 +61,60 @@ void App::draw_footer(const std::string& hint) {
     refresh();
 }
 
+void App::prompt_seed() {
+    draw_header("Welcome");
+    draw_footer("j/k: navigate | Enter: select");
+
+    int max_y = getmaxy(stdscr);
+    int max_x = getmaxx(stdscr);
+
+    if (main_win_) delwin(main_win_);
+    main_win_ = newwin(max_y - 3, max_x, 2, 0);
+    keypad(main_win_, TRUE);
+
+    mvwprintw(main_win_, 1, 2, "No exercises or templates found.");
+    mvwprintw(main_win_, 2, 2, "Load default exercises and workout templates?");
+    wrefresh(main_win_);
+
+    WINDOW* menu_win = derwin(main_win_, max_y - 7, max_x, 4, 0);
+    keypad(menu_win, TRUE);
+
+    bool done = false;
+    bool seed = false;
+
+    Menu menu(menu_win, {
+        {"  Yes, load defaults", [&]{ seed = true; done = true; }},
+        {"  No, start empty",    [&]{ done = true; }},
+    });
+
+    while (!done) {
+        werase(menu_win);
+        menu.draw();
+        int ch = wgetch(menu_win);
+        menu.handle_input(ch);
+    }
+
+    delwin(menu_win);
+
+    if (seed) {
+        sf::seed_default_exercises(repo_);
+        sf::seed_default_templates(repo_);
+    }
+    repo_.set_setup_complete(true);
+}
+
 void App::run() {
     init_ncurses();
+
+    if (!repo_.is_setup_complete()) {
+        auto exercises = repo_.list_exercises();
+        auto templates = repo_.list_templates();
+        if (exercises.empty() && templates.empty()) {
+            prompt_seed();
+        } else {
+            repo_.set_setup_complete(true);
+        }
+    }
 
     while (current_screen_ != Screen::Quit) {
         clear();
