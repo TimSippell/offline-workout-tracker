@@ -7,11 +7,17 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(BUILD_TUI "Build the ncurses TUI application" ON)
 option(BUILD_JNI "Build JNI bindings for Android" OFF)
+option(BUILD_TESTS "Build tests" ON)
 
 add_subdirectory(lib)
 
 if(BUILD_TUI)
     add_subdirectory(tui)
+endif()
+
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
 endif()
 
 if(BUILD_JNI)
