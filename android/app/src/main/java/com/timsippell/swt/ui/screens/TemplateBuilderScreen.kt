@@ -9,9 +9,11 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.timsippell.swt.bridge.SwtBridge
@@ -164,24 +166,28 @@ private fun AddTemplateSetDialog(
                 OutlinedTextField(
                     value = numSets,
                     onValueChange = { numSets = it },
-                    label = { Text("Number of sets") }
+                    label = { Text("Number of sets") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 OutlinedTextField(
                     value = reps,
                     onValueChange = { reps = it },
-                    label = { Text("Reps per set") }
+                    label = { Text("Reps per set") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 if (isWeightExercise) {
                     OutlinedTextField(
                         value = weight,
                         onValueChange = { weight = it },
-                        label = { Text("Weight ($weightUnit) (optional)") }
+                        label = { Text("Weight ($weightUnit) (optional)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                     )
                 }
                 OutlinedTextField(
                     value = rpe,
                     onValueChange = { rpe = it },
-                    label = { Text("Target RPE (optional)") }
+                    label = { Text("Target RPE (optional)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
             }
         },

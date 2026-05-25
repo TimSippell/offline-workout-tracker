@@ -24,6 +24,7 @@ public:
     int64_t start_workout(const std::string& name = "");
     void finish_workout(int64_t workout_id);
     std::optional<Workout> get_workout(int64_t id);
+    std::optional<Workout> get_active_workout();
     std::vector<Workout> list_workouts(int limit = 20, int offset = 0);
     void update_workout(const Workout& w);
     void delete_workout(int64_t id);

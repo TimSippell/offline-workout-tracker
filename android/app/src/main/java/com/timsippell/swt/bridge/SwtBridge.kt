@@ -87,6 +87,7 @@ object SwtBridge {
 
     fun startWorkout(name: String = ""): Long = nativeStartWorkout(name)
     fun finishWorkout(id: Long) = nativeFinishWorkout(id)
+    fun getActiveWorkout(): Workout? = nativeGetActiveWorkout()
     fun listWorkouts(limit: Int = 20, offset: Int = 0): List<Workout> =
         nativeListWorkouts(limit, offset)?.toList() ?: emptyList()
     fun deleteWorkout(id: Long) = nativeDeleteWorkout(id)
@@ -125,6 +126,7 @@ object SwtBridge {
     private external fun nativeDeleteExercise(id: Long)
     private external fun nativeStartWorkout(name: String): Long
     private external fun nativeFinishWorkout(id: Long)
+    private external fun nativeGetActiveWorkout(): Workout?
     private external fun nativeListWorkouts(limit: Int, offset: Int): Array<Workout>?
     private external fun nativeDeleteWorkout(id: Long)
     private external fun nativeAddSet(workoutId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double): Long

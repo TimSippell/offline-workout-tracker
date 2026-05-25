@@ -191,8 +191,26 @@ std::optional<Workout> Repository::get_workout(int64_t id) {
     return w;
 }
 
+std::optional<Workout> Repository::get_active_workout() {
+    const char* sql = "SELECT id, name, started_at, finished_at, notes FROM workout WHERE finished_at IS NULL ORDER BY started_at DESC LIMIT 1";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+
+    if (sqlite3_step(raw) != SQLITE_ROW) return std::nullopt;
+
+    Workout w;
+    w.id = sqlite3_column_int64(raw, 0);
+    w.name = col_text(raw, 1);
+    w.started_at = col_text(raw, 2);
+    w.finished_at = col_text(raw, 3);
+    w.notes = col_text(raw, 4);
+    w.sets = get_sets_for_workout(w.id);
+    return w;
+}
+
 std::vector<Workout> Repository::list_workouts(int limit, int offset) {
-    const char* sql = "SELECT id, name, started_at, finished_at, notes FROM workout ORDER BY started_at DESC LIMIT ? OFFSET ?";
+    const char* sql = "SELECT id, name, started_at, finished_at, notes FROM workout WHERE finished_at IS NOT NULL ORDER BY started_at DESC LIMIT ? OFFSET ?";
     sqlite3_stmt* raw = nullptr;
     sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
     StmtGuard stmt{raw};

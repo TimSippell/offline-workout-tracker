@@ -107,6 +107,14 @@ static jobject makeWorkout(JNIEnv* env, const sf::Workout& w) {
         (jint)w.sets.size());
 }
 
+JNIEXPORT jobject JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeGetActiveWorkout(JNIEnv* env, jobject) {
+    if (!g_repo) return nullptr;
+    auto w = g_repo->get_active_workout();
+    if (!w) return nullptr;
+    return makeWorkout(env, *w);
+}
+
 JNIEXPORT jobjectArray JNICALL
 Java_com_timsippell_swt_bridge_SwtBridge_nativeListWorkouts(JNIEnv* env, jobject, jint limit, jint offset) {
     if (!g_repo) return nullptr;

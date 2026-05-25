@@ -8,12 +8,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.timsippell.swt.bridge.SwtBridge
@@ -23,37 +27,64 @@ import com.timsippell.swt.bridge.SwtBridge
 fun WorkoutScreen(navController: NavController) {
     val context = LocalContext.current
     val weightUnit = remember { AppSettings.getWeightUnit(context) }
-    var activeWorkoutId by remember { mutableStateOf<Long?>(null) }
-    var sets by remember { mutableStateOf<List<SwtBridge.WorkoutSet>>(emptyList()) }
+    val restored = remember { SwtBridge.getActiveWorkout() }
+    var activeWorkoutId by remember { mutableStateOf(restored?.id) }
+    var sets by remember { mutableStateOf(
+        restored?.let { SwtBridge.getSetsForWorkout(it.id) } ?: emptyList()
+    ) }
     var exercises by remember { mutableStateOf(SwtBridge.listExercises()) }
     var showAddSet by remember { mutableStateOf(false) }
     var showTemplatePicker by remember { mutableStateOf(false) }
     var editingSet by remember { mutableStateOf<SwtBridge.WorkoutSet?>(null) }
     var completedSets by remember { mutableStateOf(setOf<Long>()) }
+    var showCancelDialog by remember { mutableStateOf(false) }
+    var showFinishDialog by remember { mutableStateOf(false) }
 
     fun refreshSets() {
         activeWorkoutId?.let { sets = SwtBridge.getSetsForWorkout(it) }
     }
 
+    var showActive by remember { mutableStateOf(activeWorkoutId != null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (activeWorkoutId != null) "Active Workout" else "Workout") },
+                title = { Text(if (showActive && activeWorkoutId != null) "Active Workout" else "Workout") },
+                navigationIcon = {
+                    if (showActive && activeWorkoutId != null) {
+                        IconButton(onClick = { showActive = false }) {
+                            Icon(Icons.Default.Close, contentDescription = "Back")
+                        }
+                    }
+                },
                 actions = {
-                    if (activeWorkoutId != null) {
-                        IconButton(onClick = {
-                            SwtBridge.finishWorkout(activeWorkoutId!!)
-                            activeWorkoutId = null
-                            sets = emptyList()
+                    if (showActive && activeWorkoutId != null) {
+                        TextButton(onClick = { showCancelDialog = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = null)
+                            Spacer(Modifier.width(4.dp))
+                            Text("Cancel")
+                        }
+                        TextButton(onClick = {
+                            if (sets.isNotEmpty() && completedSets.size < sets.size) {
+                                showFinishDialog = true
+                            } else {
+                                SwtBridge.finishWorkout(activeWorkoutId!!)
+                                activeWorkoutId = null
+                                sets = emptyList()
+                                completedSets = emptySet()
+                                showActive = false
+                            }
                         }) {
-                            Icon(Icons.Default.Check, contentDescription = "Finish")
+                            Icon(Icons.Default.Check, contentDescription = null)
+                            Spacer(Modifier.width(4.dp))
+                            Text("Finish")
                         }
                     }
                 }
             )
         },
         floatingActionButton = {
-            if (activeWorkoutId != null) {
+            if (showActive && activeWorkoutId != null) {
                 FloatingActionButton(onClick = { showAddSet = true }) {
                     Icon(Icons.Default.Add, contentDescription = "Add set")
                 }
@@ -64,29 +95,47 @@ fun WorkoutScreen(navController: NavController) {
             modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (activeWorkoutId == null) {
-                Button(
-                    onClick = {
-                        activeWorkoutId = SwtBridge.startWorkout("")
-                        exercises = SwtBridge.listExercises()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Start Blank Workout")
-                }
+            if (!showActive || activeWorkoutId == null) {
+                if (activeWorkoutId != null) {
+                    Button(
+                        onClick = {
+                            exercises = SwtBridge.listExercises()
+                            refreshSets()
+                            showActive = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Continue Workout")
+                    }
 
-                OutlinedButton(
-                    onClick = { showTemplatePicker = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Start from Template")
-                }
+                    Spacer(Modifier.height(8.dp))
+                } else {
+                    Button(
+                        onClick = {
+                            activeWorkoutId = SwtBridge.startWorkout("")
+                            exercises = SwtBridge.listExercises()
+                            showActive = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Start Blank Workout")
+                    }
 
-                Spacer(Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = { showTemplatePicker = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Start from Template")
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                }
 
                 TextButton(
                     onClick = { navController.navigate("templates") },
@@ -125,6 +174,52 @@ fun WorkoutScreen(navController: NavController) {
         }
     }
 
+    if (showCancelDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text("Cancel Workout") },
+            text = { Text("This will delete the workout and all its sets. Are you sure?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    activeWorkoutId?.let { SwtBridge.deleteWorkout(it) }
+                    activeWorkoutId = null
+                    sets = emptyList()
+                    completedSets = emptySet()
+                    showActive = false
+                    showCancelDialog = false
+                },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDialog = false }) { Text("Keep") }
+            }
+        )
+    }
+
+    if (showFinishDialog) {
+        val incomplete = sets.size - completedSets.size
+        AlertDialog(
+            onDismissRequest = { showFinishDialog = false },
+            title = { Text("Incomplete Workout") },
+            text = { Text("$incomplete of ${sets.size} sets not completed. Finish anyway?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    SwtBridge.finishWorkout(activeWorkoutId!!)
+                    activeWorkoutId = null
+                    sets = emptyList()
+                    completedSets = emptySet()
+                    showActive = false
+                    showFinishDialog = false
+                }) { Text("Finish") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showFinishDialog = false }) { Text("Continue") }
+            }
+        )
+    }
+
     if (showAddSet && activeWorkoutId != null) {
         AddSetDialog(
             exercises = exercises,
@@ -146,6 +241,7 @@ fun WorkoutScreen(navController: NavController) {
                 exercises = SwtBridge.listExercises()
                 refreshSets()
                 showTemplatePicker = false
+                showActive = true
             }
         )
     }
@@ -275,13 +371,13 @@ private fun AddSetDialog(
                         }
                     }
                 }
-                OutlinedTextField(value = reps, onValueChange = { reps = it }, label = { Text("Reps") })
+                OutlinedTextField(value = reps, onValueChange = { reps = it }, label = { Text("Reps") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 if (isTimeExercise) {
-                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Time (seconds)") })
+                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Time (seconds)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 } else {
-                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Weight ($weightUnit)") })
+                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Weight ($weightUnit)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                 }
-                OutlinedTextField(value = rpe, onValueChange = { rpe = it }, label = { Text("RPE (optional)") })
+                OutlinedTextField(value = rpe, onValueChange = { rpe = it }, label = { Text("RPE (optional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
             }
         },
         confirmButton = {
@@ -318,13 +414,13 @@ private fun EditSetDialog(
         title = { Text(exerciseName) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = reps, onValueChange = { reps = it }, label = { Text("Reps") })
+                OutlinedTextField(value = reps, onValueChange = { reps = it }, label = { Text("Reps") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 if (isTimeExercise) {
-                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Time (seconds)") })
+                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Time (seconds)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 } else {
-                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Weight ($weightUnit)") })
+                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Weight ($weightUnit)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                 }
-                OutlinedTextField(value = rpe, onValueChange = { rpe = it }, label = { Text("RPE (optional)") })
+                OutlinedTextField(value = rpe, onValueChange = { rpe = it }, label = { Text("RPE (optional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
             }
         },
         confirmButton = {
@@ -347,15 +443,30 @@ private fun TemplatePickerDialog(
     onDismiss: () -> Unit,
     onSelect: (Long) -> Unit
 ) {
-    val templates = remember { SwtBridge.listTemplates() }
+    var templates by remember { mutableStateOf(SwtBridge.listTemplates()) }
+    var showSeedPrompt by remember { mutableStateOf(templates.isEmpty()) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Choose Template") },
-        text = {
-            if (templates.isEmpty()) {
-                Text("No templates yet. Create one first.")
-            } else {
+    if (showSeedPrompt) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("No Templates") },
+            text = { Text("Would you like to add some common workout templates? You can edit or remove them later.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    seedDefaultTemplates()
+                    templates = SwtBridge.listTemplates()
+                    showSeedPrompt = false
+                }) { Text("Add defaults") }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+            }
+        )
+    } else {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Choose Template") },
+            text = {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     items(templates) { template ->
                         TextButton(
@@ -369,9 +480,9 @@ private fun TemplatePickerDialog(
                         }
                     }
                 }
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
-    )
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        )
+    }
 }
