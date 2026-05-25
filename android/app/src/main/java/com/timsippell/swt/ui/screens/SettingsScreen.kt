@@ -32,11 +32,17 @@ object AppSettings {
         getPrefs(context).edit().putString(KEY_WEIGHT_UNIT, unit).apply()
     }
 
+    fun toDisplayWeight(storedKg: Double, unit: String): Double =
+        if (unit == "lbs") storedKg * KG_TO_LBS else storedKg
+
     fun toDisplayWeight(storedKg: Double, context: Context): Double =
-        if (getWeightUnit(context) == "lbs") storedKg * KG_TO_LBS else storedKg
+        toDisplayWeight(storedKg, getWeightUnit(context))
+
+    fun toStorageWeight(displayValue: Double, unit: String): Double =
+        if (unit == "lbs") displayValue / KG_TO_LBS else displayValue
 
     fun toStorageWeight(displayValue: Double, context: Context): Double =
-        if (getWeightUnit(context) == "lbs") displayValue / KG_TO_LBS else displayValue
+        toStorageWeight(displayValue, getWeightUnit(context))
 
     fun isSetupComplete(context: Context): Boolean =
         getPrefs(context).getBoolean(KEY_SETUP_COMPLETE, false)

@@ -268,7 +268,7 @@ private fun CalendarView(
     }
 }
 
-private fun parseDate(dateStr: String): LocalDate? {
+internal fun parseDate(dateStr: String): LocalDate? {
     return try {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         LocalDate.parse(dateStr, formatter)
