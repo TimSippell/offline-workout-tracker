@@ -23,6 +23,7 @@ import com.timsippell.swt.bridge.SwtBridge
 fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
     if (templateId == null) return
 
+    val context = LocalContext.current
     var sets by remember { mutableStateOf(SwtBridge.getTemplateSets(templateId)) }
     val exercises = remember { SwtBridge.listExercises() }
     var showAddDialog by remember { mutableStateOf(false) }
@@ -80,7 +81,7 @@ fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
                 for (i in 1..numSets) {
                     SwtBridge.addTemplateSet(
                         templateId, exerciseId,
-                        sets.size + i, reps, weight, rpe
+                        sets.size + i, reps, AppSettings.toStorageWeight(weight, context), rpe
                     )
                 }
                 sets = SwtBridge.getTemplateSets(templateId)
@@ -96,6 +97,8 @@ private fun TemplateSetCard(
     set: SwtBridge.TemplateSet,
     onDelete: () -> Unit
 ) {
+    val context = LocalContext.current
+    val weightUnit = remember { AppSettings.getWeightUnit(context) }
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
@@ -107,7 +110,7 @@ private fun TemplateSetCard(
                     buildString {
                         append("Set ${set.order}")
                         if (set.reps > 0) append(" • ${set.reps} reps")
-                        if (set.weight > 0) append(" × ${set.weight}")
+                        if (set.weight > 0) append(" × ${"%.1f".format(AppSettings.toDisplayWeight(set.weight, context))} $weightUnit")
                         if (set.rpe > 0) append(" @RPE ${set.rpe}")
                     },
                     style = MaterialTheme.typography.bodyMedium

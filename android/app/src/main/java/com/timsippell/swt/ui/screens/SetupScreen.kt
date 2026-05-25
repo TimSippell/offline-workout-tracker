@@ -24,7 +24,8 @@ fun SetupScreen(onFinish: () -> Unit) {
         mutableStateMapOf<Long, String>().apply {
             exercises.forEach { ex ->
                 val stored = AppSettings.getOneRepMax(context, ex.id)
-                this[ex.id] = if (stored > 0) stored.toString() else ""
+                val display = if (stored > 0) AppSettings.toDisplayWeight(stored, context) else 0.0
+                this[ex.id] = if (stored > 0) "%.1f".format(display) else ""
             }
         }
     }
@@ -46,7 +47,7 @@ fun SetupScreen(onFinish: () -> Unit) {
                     onClick = {
                         values.forEach { (exerciseId, value) ->
                             val weight = value.toDoubleOrNull() ?: 0.0
-                            AppSettings.setOneRepMax(context, exerciseId, weight)
+                            AppSettings.setOneRepMax(context, exerciseId, AppSettings.toStorageWeight(weight, context))
                         }
                         AppSettings.setSetupComplete(context, true)
                         onFinish()

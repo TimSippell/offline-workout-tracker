@@ -225,7 +225,7 @@ fun WorkoutScreen(navController: NavController) {
             exercises = exercises,
             onDismiss = { showAddSet = false },
             onConfirm = { exerciseId, reps, weight, rpe ->
-                SwtBridge.addSet(activeWorkoutId!!, exerciseId, sets.size + 1, reps, weight, rpe)
+                SwtBridge.addSet(activeWorkoutId!!, exerciseId, sets.size + 1, reps, AppSettings.toStorageWeight(weight, context), rpe)
                 exercises = SwtBridge.listExercises()
                 refreshSets()
                 showAddSet = false
@@ -252,7 +252,7 @@ fun WorkoutScreen(navController: NavController) {
             exercises = exercises,
             onDismiss = { editingSet = null },
             onConfirm = { reps, weight, rpe ->
-                SwtBridge.updateSet(set.id, reps, weight, rpe)
+                SwtBridge.updateSet(set.id, reps, AppSettings.toStorageWeight(weight, context), rpe)
                 refreshSets()
                 editingSet = null
             }
@@ -270,9 +270,11 @@ private fun SetCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
+    val context = LocalContext.current
     val exercise = exercises.find { it.id == set.exerciseId }
     val exerciseName = exercise?.name ?: "Unknown"
     val isTimeExercise = exercise?.notes == "time"
+    val displayWeight = AppSettings.toDisplayWeight(set.weight, context)
 
     val cardColors = when {
         completed -> CardDefaults.cardColors(
@@ -299,7 +301,7 @@ private fun SetCard(
                         if (set.reps > 0) append("${set.reps} reps")
                         if (set.weight > 0) {
                             if (isTimeExercise) append(" × ${set.weight.toInt()}s")
-                            else append(" × ${set.weight} $weightUnit")
+                            else append(" × ${"%.1f".format(displayWeight)} $weightUnit")
                         } else if (set.reps > 0) append(" — tap to enter weight")
                         if (set.rpe > 0) append(" @RPE ${set.rpe}")
                     },
@@ -406,7 +408,8 @@ private fun EditSetDialog(
     val exerciseName = exercise?.name ?: "Unknown"
     val isTimeExercise = exercise?.notes == "time"
     var reps by remember { mutableStateOf(if (set.reps > 0) set.reps.toString() else "") }
-    var weight by remember { mutableStateOf(if (set.weight > 0) set.weight.toString() else "") }
+    val displayWeight = if (set.weight > 0) AppSettings.toDisplayWeight(set.weight, context) else 0.0
+    var weight by remember { mutableStateOf(if (set.weight > 0) "%.1f".format(displayWeight) else "") }
     var rpe by remember { mutableStateOf(if (set.rpe > 0) set.rpe.toString() else "") }
 
     AlertDialog(

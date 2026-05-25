@@ -26,11 +26,14 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import androidx.compose.ui.platform.LocalContext
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen() {
+    val context = LocalContext.current
+    val weightUnit = remember { AppSettings.getWeightUnit(context) }
     var workouts by remember { mutableStateOf(SwtBridge.listWorkouts()) }
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
@@ -124,7 +127,7 @@ fun HistoryScreen() {
                                             Text(
                                                 buildString {
                                                     if (set.reps > 0) append("${set.reps} reps")
-                                                    if (set.weight > 0) append(" × ${set.weight} kg")
+                                                    if (set.weight > 0) append(" × ${"%.1f".format(AppSettings.toDisplayWeight(set.weight, context))} $weightUnit")
                                                     if (set.rpe > 0) append(" @${set.rpe}")
                                                 },
                                                 style = MaterialTheme.typography.bodyMedium
