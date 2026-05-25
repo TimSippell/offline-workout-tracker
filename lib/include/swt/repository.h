@@ -55,6 +55,16 @@ public:
     // History
     std::vector<ProgressionPoint> get_progression(int64_t exercise_id, int last_n_sessions = 20);
 
+    // Settings
+    std::string get_setting(const std::string& key, const std::string& default_value = "");
+    void set_setting(const std::string& key, const std::string& value);
+    std::string get_weight_unit();
+    void set_weight_unit(const std::string& unit);
+    double get_one_rep_max(int64_t exercise_id);
+    void set_one_rep_max(int64_t exercise_id, double weight);
+    bool is_setup_complete();
+    void set_setup_complete(bool complete);
+
 private:
     Database& db_;
 };

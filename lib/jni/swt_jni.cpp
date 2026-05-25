@@ -338,4 +338,116 @@ Java_com_timsippell_swt_bridge_SwtBridge_nativeUpdateExercise(JNIEnv* env, jobje
     env->ReleaseStringUTFChars(notes, nt);
 }
 
+// --- Weight Conversion ---
+
+JNIEXPORT jdouble JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeToDisplayWeight(JNIEnv* env, jobject,
+        jdouble storedKg, jstring unit) {
+    const char* u = env->GetStringUTFChars(unit, nullptr);
+    double result = sf::to_display_weight(storedKg, u);
+    env->ReleaseStringUTFChars(unit, u);
+    return result;
+}
+
+JNIEXPORT jdouble JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeToStorageWeight(JNIEnv* env, jobject,
+        jdouble displayValue, jstring unit) {
+    const char* u = env->GetStringUTFChars(unit, nullptr);
+    double result = sf::to_storage_weight(displayValue, u);
+    env->ReleaseStringUTFChars(unit, u);
+    return result;
+}
+
+// --- Settings ---
+
+JNIEXPORT jstring JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeGetWeightUnit(JNIEnv* env, jobject) {
+    if (!g_repo) return env->NewStringUTF("kg");
+    return env->NewStringUTF(g_repo->get_weight_unit().c_str());
+}
+
+JNIEXPORT void JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeSetWeightUnit(JNIEnv* env, jobject, jstring unit) {
+    if (!g_repo) return;
+    const char* u = env->GetStringUTFChars(unit, nullptr);
+    g_repo->set_weight_unit(u);
+    env->ReleaseStringUTFChars(unit, u);
+}
+
+JNIEXPORT jdouble JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeGetOneRepMax(JNIEnv*, jobject, jlong exerciseId) {
+    if (!g_repo) return 0.0;
+    return g_repo->get_one_rep_max(exerciseId);
+}
+
+JNIEXPORT void JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeSetOneRepMax(JNIEnv*, jobject,
+        jlong exerciseId, jdouble weight) {
+    if (g_repo) g_repo->set_one_rep_max(exerciseId, weight);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeIsSetupComplete(JNIEnv*, jobject) {
+    if (!g_repo) return JNI_FALSE;
+    return g_repo->is_setup_complete() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeSetSetupComplete(JNIEnv*, jobject, jboolean complete) {
+    if (g_repo) g_repo->set_setup_complete(complete == JNI_TRUE);
+}
+
+// --- Defaults ---
+
+JNIEXPORT void JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeSeedDefaultExercises(JNIEnv*, jobject) {
+    if (g_repo) sf::seed_default_exercises(*g_repo);
+}
+
+JNIEXPORT void JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeSeedDefaultTemplates(JNIEnv*, jobject) {
+    if (g_repo) sf::seed_default_templates(*g_repo);
+}
+
+// --- Export/Import ---
+
+JNIEXPORT jstring JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeExportToJson(JNIEnv* env, jobject) {
+    if (!g_repo) return env->NewStringUTF("{}");
+    return env->NewStringUTF(sf::export_to_json(*g_repo).c_str());
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativePreviewImport(JNIEnv* env, jobject, jstring json) {
+    if (!g_repo) return nullptr;
+    const char* j = env->GetStringUTFChars(json, nullptr);
+    auto summary = sf::preview_import(*g_repo, j);
+    env->ReleaseStringUTFChars(json, j);
+
+    jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$ImportSummary");
+    jmethodID ctor = env->GetMethodID(cls, "<init>", "(IIIIII)V");
+    return env->NewObject(cls, ctor,
+        summary.new_exercises, summary.existing_exercises,
+        summary.workouts, summary.workout_sets,
+        summary.templates, summary.template_sets);
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeImportFromJson(JNIEnv* env, jobject, jstring json) {
+    if (!g_repo) return env->NewStringUTF("Error: not initialized");
+    const char* j = env->GetStringUTFChars(json, nullptr);
+    try {
+        auto result = sf::import_from_json(*g_repo, j);
+        env->ReleaseStringUTFChars(json, j);
+        std::string msg = "Imported " + std::to_string(result.workouts) + " workouts, "
+            + std::to_string(result.templates) + " templates, "
+            + std::to_string(result.sets) + " sets";
+        return env->NewStringUTF(msg.c_str());
+    } catch (const std::exception& e) {
+        env->ReleaseStringUTFChars(json, j);
+        std::string msg = "Import failed: " + std::string(e.what());
+        return env->NewStringUTF(msg.c_str());
+    }
+}
+
 } // extern "C"

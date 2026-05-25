@@ -16,7 +16,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.platform.LocalContext
 import com.timsippell.swt.ui.screens.*
 
 enum class Screen(val route: String, val label: String, val icon: ImageVector) {
@@ -33,12 +32,8 @@ fun SwtApp() {
     val navController = rememberNavController()
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
-    val context = LocalContext.current
 
     val showBottomBar = currentRoute in Screen.entries.map { it.route }
-    var showSetupPrompt by remember {
-        mutableStateOf(!AppSettings.isSetupComplete(context))
-    }
 
     MaterialTheme(colorScheme = dynamicColorScheme()) {
         Scaffold(
@@ -92,28 +87,6 @@ fun SwtApp() {
             }
         }
 
-        if (showSetupPrompt) {
-            AlertDialog(
-                onDismissRequest = {
-                    AppSettings.setSetupComplete(context, true)
-                    showSetupPrompt = false
-                },
-                title = { Text("Welcome") },
-                text = { Text("Would you like to enter your one rep max for exercises? This helps track your progress. You can always do this later in Settings.") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showSetupPrompt = false
-                        navController.navigate("setup")
-                    }) { Text("Set up now") }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        AppSettings.setSetupComplete(context, true)
-                        showSetupPrompt = false
-                    }) { Text("Skip") }
-                }
-            )
-        }
     }
 }
 

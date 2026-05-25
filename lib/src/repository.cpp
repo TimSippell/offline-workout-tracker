@@ -591,4 +591,53 @@ std::vector<ProgressionPoint> Repository::get_progression(int64_t exercise_id, i
     return result;
 }
 
+// --- Settings ---
+
+std::string Repository::get_setting(const std::string& key, const std::string& default_value) {
+    const char* sql = "SELECT value FROM settings WHERE key = ?";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+    sqlite3_bind_text(raw, 1, key.c_str(), -1, SQLITE_TRANSIENT);
+
+    if (sqlite3_step(raw) != SQLITE_ROW) return default_value;
+    return col_text(raw, 0);
+}
+
+void Repository::set_setting(const std::string& key, const std::string& value) {
+    const char* sql = "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+    sqlite3_bind_text(raw, 1, key.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(raw, 2, value.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_step(raw);
+}
+
+std::string Repository::get_weight_unit() {
+    return get_setting("weight_unit", "kg");
+}
+
+void Repository::set_weight_unit(const std::string& unit) {
+    set_setting("weight_unit", unit);
+}
+
+double Repository::get_one_rep_max(int64_t exercise_id) {
+    auto val = get_setting("1rm_" + std::to_string(exercise_id), "0");
+    try { return std::stod(val); }
+    catch (...) { return 0.0; }
+}
+
+void Repository::set_one_rep_max(int64_t exercise_id, double weight) {
+    set_setting("1rm_" + std::to_string(exercise_id), std::to_string(weight));
+}
+
+bool Repository::is_setup_complete() {
+    return get_setting("setup_complete", "0") == "1";
+}
+
+void Repository::set_setup_complete(bool complete) {
+    set_setting("setup_complete", complete ? "1" : "0");
+}
+
 } // namespace sf

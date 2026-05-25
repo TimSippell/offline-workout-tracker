@@ -66,6 +66,15 @@ object SwtBridge {
         val sessionVolume: Double
     )
 
+    data class ImportSummary(
+        val newExercises: Int,
+        val existingExercises: Int,
+        val workouts: Int,
+        val workoutSets: Int,
+        val templates: Int,
+        val templateSets: Int
+    )
+
     fun init(context: Context) {
         val dbPath = context.getDatabasePath("swt.db").absolutePath
         context.getDatabasePath("swt.db").parentFile?.mkdirs()
@@ -118,6 +127,27 @@ object SwtBridge {
     fun getProgression(exerciseId: Long, sessions: Int = 20): List<ProgressionPoint> =
         nativeGetProgression(exerciseId, sessions)?.toList() ?: emptyList()
 
+    // Weight conversion
+    fun toDisplayWeight(storedKg: Double, unit: String): Double = nativeToDisplayWeight(storedKg, unit)
+    fun toStorageWeight(displayValue: Double, unit: String): Double = nativeToStorageWeight(displayValue, unit)
+
+    // Settings
+    fun getWeightUnit(): String = nativeGetWeightUnit()
+    fun setWeightUnit(unit: String) = nativeSetWeightUnit(unit)
+    fun getOneRepMax(exerciseId: Long): Double = nativeGetOneRepMax(exerciseId)
+    fun setOneRepMax(exerciseId: Long, weight: Double) = nativeSetOneRepMax(exerciseId, weight)
+    fun isSetupComplete(): Boolean = nativeIsSetupComplete()
+    fun setSetupComplete(complete: Boolean) = nativeSetSetupComplete(complete)
+
+    // Defaults
+    fun seedDefaultExercises() = nativeSeedDefaultExercises()
+    fun seedDefaultTemplates() = nativeSeedDefaultTemplates()
+
+    // Export/Import
+    fun exportToJson(): String = nativeExportToJson()
+    fun previewImport(json: String): ImportSummary? = nativePreviewImport(json)
+    fun importFromJson(json: String): String = nativeImportFromJson(json)
+
     private external fun nativeInit(dbPath: String)
     private external fun nativeClose()
     private external fun nativeAddExercise(name: String, category: String, muscleGroup: String, notes: String): Long
@@ -142,4 +172,17 @@ object SwtBridge {
     private external fun nativeStartWorkoutFromTemplate(templateId: Long, name: String): Long
     private external fun nativeGetStats(exerciseId: Long): ExerciseStats?
     private external fun nativeGetProgression(exerciseId: Long, sessions: Int): Array<ProgressionPoint>?
+    private external fun nativeToDisplayWeight(storedKg: Double, unit: String): Double
+    private external fun nativeToStorageWeight(displayValue: Double, unit: String): Double
+    private external fun nativeGetWeightUnit(): String
+    private external fun nativeSetWeightUnit(unit: String)
+    private external fun nativeGetOneRepMax(exerciseId: Long): Double
+    private external fun nativeSetOneRepMax(exerciseId: Long, weight: Double)
+    private external fun nativeIsSetupComplete(): Boolean
+    private external fun nativeSetSetupComplete(complete: Boolean)
+    private external fun nativeSeedDefaultExercises()
+    private external fun nativeSeedDefaultTemplates()
+    private external fun nativeExportToJson(): String
+    private external fun nativePreviewImport(json: String): ImportSummary?
+    private external fun nativeImportFromJson(json: String): String
 }

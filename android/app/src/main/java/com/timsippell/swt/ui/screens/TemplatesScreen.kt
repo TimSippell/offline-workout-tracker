@@ -16,49 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.timsippell.swt.bridge.SwtBridge
 
-internal data class DefaultTemplateSet(val exerciseName: String, val sets: Int, val reps: Int)
-internal data class DefaultTemplate(val name: String, val exercises: List<DefaultTemplateSet>)
-
-internal val defaultTemplates = listOf(
-    DefaultTemplate("Push Day", listOf(
-        DefaultTemplateSet("Bench Press", 4, 8),
-        DefaultTemplateSet("Overhead Press", 3, 10),
-        DefaultTemplateSet("Incline Bench Press", 3, 10),
-        DefaultTemplateSet("Lateral Raise", 3, 15),
-        DefaultTemplateSet("Tricep Pushdown", 3, 12),
-    )),
-    DefaultTemplate("Pull Day", listOf(
-        DefaultTemplateSet("Deadlift", 3, 5),
-        DefaultTemplateSet("Barbell Row", 4, 8),
-        DefaultTemplateSet("Pull Up", 3, 8),
-        DefaultTemplateSet("Face Pull", 3, 15),
-        DefaultTemplateSet("Bicep Curl", 3, 12),
-    )),
-    DefaultTemplate("Leg Day", listOf(
-        DefaultTemplateSet("Squat", 4, 6),
-        DefaultTemplateSet("Romanian Deadlift", 3, 10),
-        DefaultTemplateSet("Leg Press", 3, 12),
-        DefaultTemplateSet("Leg Curl", 3, 12),
-        DefaultTemplateSet("Calf Raise", 4, 15),
-    )),
-    DefaultTemplate("Upper Body", listOf(
-        DefaultTemplateSet("Bench Press", 4, 8),
-        DefaultTemplateSet("Barbell Row", 4, 8),
-        DefaultTemplateSet("Overhead Press", 3, 10),
-        DefaultTemplateSet("Lat Pulldown", 3, 10),
-        DefaultTemplateSet("Bicep Curl", 2, 12),
-        DefaultTemplateSet("Tricep Pushdown", 2, 12),
-    )),
-    DefaultTemplate("Lower Body", listOf(
-        DefaultTemplateSet("Squat", 4, 6),
-        DefaultTemplateSet("Romanian Deadlift", 3, 10),
-        DefaultTemplateSet("Leg Press", 3, 12),
-        DefaultTemplateSet("Leg Extension", 3, 12),
-        DefaultTemplateSet("Leg Curl", 3, 12),
-        DefaultTemplateSet("Calf Raise", 4, 15),
-    )),
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TemplatesScreen(navController: NavController) {
@@ -123,23 +80,7 @@ fun TemplatesScreen(navController: NavController) {
 
 }
 
-internal fun seedDefaultTemplates() {
-    val exercises = SwtBridge.listExercises()
-    val exerciseMap = exercises.associateBy { it.name }
-
-    for (tmpl in defaultTemplates) {
-        val templateId = SwtBridge.createTemplate(tmpl.name)
-        var order = 1
-        for (ex in tmpl.exercises) {
-            val exerciseId = exerciseMap[ex.exerciseName]?.id
-                ?: SwtBridge.addExercise(ex.exerciseName, "", "", "weight")
-            for (s in 1..ex.sets) {
-                SwtBridge.addTemplateSet(templateId, exerciseId, order, ex.reps, 0.0, 0.0)
-                order++
-            }
-        }
-    }
-}
+internal fun seedDefaultTemplates() = SwtBridge.seedDefaultTemplates()
 
 @Composable
 private fun TemplateCard(

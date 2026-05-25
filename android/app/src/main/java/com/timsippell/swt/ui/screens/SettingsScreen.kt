@@ -1,8 +1,6 @@
 package com.timsippell.swt.ui.screens
 
 import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -12,25 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.timsippell.swt.bridge.SwtBridge
-import org.json.JSONArray
-import org.json.JSONObject
 
 object AppSettings {
-    private const val PREFS_NAME = "swt_settings"
-    private const val KEY_WEIGHT_UNIT = "weight_unit"
-    private const val KEY_SETUP_COMPLETE = "setup_complete"
-    private const val KEY_1RM_PREFIX = "1rm_"
     private const val KG_TO_LBS = 2.20462
 
-    fun getPrefs(context: Context): SharedPreferences =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-    fun getWeightUnit(context: Context): String =
-        getPrefs(context).getString(KEY_WEIGHT_UNIT, "kg") ?: "kg"
-
-    fun setWeightUnit(context: Context, unit: String) {
-        getPrefs(context).edit().putString(KEY_WEIGHT_UNIT, unit).apply()
-    }
+    fun getWeightUnit(context: Context): String = SwtBridge.getWeightUnit()
+    fun setWeightUnit(context: Context, unit: String) = SwtBridge.setWeightUnit(unit)
 
     fun toDisplayWeight(storedKg: Double, unit: String): Double =
         if (unit == "lbs") storedKg * KG_TO_LBS else storedKg
@@ -44,19 +29,12 @@ object AppSettings {
     fun toStorageWeight(displayValue: Double, context: Context): Double =
         toStorageWeight(displayValue, getWeightUnit(context))
 
-    fun isSetupComplete(context: Context): Boolean =
-        getPrefs(context).getBoolean(KEY_SETUP_COMPLETE, false)
+    fun isSetupComplete(context: Context): Boolean = SwtBridge.isSetupComplete()
+    fun setSetupComplete(context: Context, complete: Boolean) = SwtBridge.setSetupComplete(complete)
 
-    fun setSetupComplete(context: Context, complete: Boolean) {
-        getPrefs(context).edit().putBoolean(KEY_SETUP_COMPLETE, complete).apply()
-    }
-
-    fun getOneRepMax(context: Context, exerciseId: Long): Double =
-        getPrefs(context).getFloat("$KEY_1RM_PREFIX$exerciseId", 0f).toDouble()
-
-    fun setOneRepMax(context: Context, exerciseId: Long, weight: Double) {
-        getPrefs(context).edit().putFloat("$KEY_1RM_PREFIX$exerciseId", weight.toFloat()).apply()
-    }
+    fun getOneRepMax(context: Context, exerciseId: Long): Double = SwtBridge.getOneRepMax(exerciseId)
+    fun setOneRepMax(context: Context, exerciseId: Long, weight: Double) =
+        SwtBridge.setOneRepMax(exerciseId, weight)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,7 +46,7 @@ fun SettingsScreen(onNavigateToSetup: () -> Unit = {}) {
     var exportMessage by remember { mutableStateOf<String?>(null) }
     var importMessage by remember { mutableStateOf<String?>(null) }
     var pendingImportJson by remember { mutableStateOf<String?>(null) }
-    var importSummary by remember { mutableStateOf<ImportSummary?>(null) }
+    var importSummary by remember { mutableStateOf<SwtBridge.ImportSummary?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -250,172 +228,6 @@ fun SettingsScreen(onNavigateToSetup: () -> Unit = {}) {
     }
 }
 
-private data class ImportSummary(
-    val newExercises: Int,
-    val existingExercises: Int,
-    val workouts: Int,
-    val workoutSets: Int,
-    val templates: Int,
-    val templateSets: Int
-)
-
-private fun previewImport(json: String): ImportSummary {
-    val root = JSONObject(json)
-    val existingExercises = SwtBridge.listExercises().associateBy { it.name }
-
-    val exercises = root.optJSONArray("exercises") ?: JSONArray()
-    var newCount = 0
-    var existingCount = 0
-    for (i in 0 until exercises.length()) {
-        val name = exercises.getJSONObject(i).getString("name")
-        if (existingExercises.containsKey(name)) existingCount++ else newCount++
-    }
-
-    val workouts = root.optJSONArray("workouts") ?: JSONArray()
-    var workoutSets = 0
-    for (i in 0 until workouts.length()) {
-        workoutSets += workouts.getJSONObject(i).optJSONArray("sets")?.length() ?: 0
-    }
-
-    val templates = root.optJSONArray("templates") ?: JSONArray()
-    var templateSets = 0
-    for (i in 0 until templates.length()) {
-        templateSets += templates.getJSONObject(i).optJSONArray("sets")?.length() ?: 0
-    }
-
-    return ImportSummary(newCount, existingCount, workouts.length(), workoutSets, templates.length(), templateSets)
-}
-
-private fun importDataFromJson(json: String): String {
-    val root = JSONObject(json)
-    val existingExercises = SwtBridge.listExercises().associateBy { it.name }.toMutableMap()
-
-    val exerciseIdMap = mutableMapOf<Long, Long>()
-    val exercises = root.optJSONArray("exercises") ?: JSONArray()
-    for (i in 0 until exercises.length()) {
-        val obj = exercises.getJSONObject(i)
-        val oldId = obj.getLong("id")
-        val name = obj.getString("name")
-        val existing = existingExercises[name]
-        if (existing != null) {
-            exerciseIdMap[oldId] = existing.id
-        } else {
-            val newId = SwtBridge.addExercise(
-                name,
-                obj.optString("category", ""),
-                obj.optString("muscleGroup", ""),
-                obj.optString("type", "weight")
-            )
-            exerciseIdMap[oldId] = newId
-        }
-    }
-
-    var workoutCount = 0
-    var setCount = 0
-    val workouts = root.optJSONArray("workouts") ?: JSONArray()
-    for (i in 0 until workouts.length()) {
-        val wo = workouts.getJSONObject(i)
-        val workoutId = SwtBridge.startWorkout(wo.optString("name", ""))
-        SwtBridge.finishWorkout(workoutId)
-        val sets = wo.optJSONArray("sets") ?: JSONArray()
-        for (j in 0 until sets.length()) {
-            val s = sets.getJSONObject(j)
-            val exerciseId = exerciseIdMap[s.getLong("exerciseId")] ?: continue
-            SwtBridge.addSet(
-                workoutId, exerciseId,
-                s.optInt("order", j + 1),
-                s.optInt("reps", 0),
-                s.optDouble("weight", 0.0),
-                s.optDouble("rpe", 0.0)
-            )
-            setCount++
-        }
-        workoutCount++
-    }
-
-    var templateCount = 0
-    var templateSetCount = 0
-    val templates = root.optJSONArray("templates") ?: JSONArray()
-    for (i in 0 until templates.length()) {
-        val t = templates.getJSONObject(i)
-        val templateId = SwtBridge.createTemplate(t.optString("name", ""))
-        val sets = t.optJSONArray("sets") ?: JSONArray()
-        for (j in 0 until sets.length()) {
-            val s = sets.getJSONObject(j)
-            val exerciseId = exerciseIdMap[s.getLong("exerciseId")] ?: continue
-            SwtBridge.addTemplateSet(
-                templateId, exerciseId,
-                s.optInt("order", j + 1),
-                s.optInt("reps", 0),
-                s.optDouble("weight", 0.0),
-                s.optDouble("rpe", 0.0)
-            )
-            templateSetCount++
-        }
-        templateCount++
-    }
-
-    return "Imported $workoutCount workouts, $templateCount templates, $setCount sets"
-}
-
-private fun exportDataToJson(): String {
-    val root = JSONObject()
-
-    val exercisesArr = JSONArray()
-    SwtBridge.listExercises().forEach { ex ->
-        exercisesArr.put(JSONObject().apply {
-            put("id", ex.id)
-            put("name", ex.name)
-            put("category", ex.category)
-            put("muscleGroup", ex.muscleGroup)
-            put("type", ex.notes)
-        })
-    }
-    root.put("exercises", exercisesArr)
-
-    val workoutsArr = JSONArray()
-    SwtBridge.listWorkouts(limit = 10000).forEach { workout ->
-        val wo = JSONObject().apply {
-            put("id", workout.id)
-            put("name", workout.name)
-            put("startedAt", workout.startedAt)
-            put("finishedAt", workout.finishedAt)
-        }
-        val setsArr = JSONArray()
-        SwtBridge.getSetsForWorkout(workout.id).forEach { set ->
-            setsArr.put(JSONObject().apply {
-                put("exerciseId", set.exerciseId)
-                put("order", set.order)
-                put("reps", set.reps)
-                put("weight", set.weight)
-                put("rpe", set.rpe)
-            })
-        }
-        wo.put("sets", setsArr)
-        workoutsArr.put(wo)
-    }
-    root.put("workouts", workoutsArr)
-
-    val templatesArr = JSONArray()
-    SwtBridge.listTemplates().forEach { tmpl ->
-        val t = JSONObject().apply {
-            put("id", tmpl.id)
-            put("name", tmpl.name)
-        }
-        val setsArr = JSONArray()
-        SwtBridge.getTemplateSets(tmpl.id).forEach { set ->
-            setsArr.put(JSONObject().apply {
-                put("exerciseId", set.exerciseId)
-                put("order", set.order)
-                put("reps", set.reps)
-                put("weight", set.weight)
-                put("rpe", set.rpe)
-            })
-        }
-        t.put("sets", setsArr)
-        templatesArr.put(t)
-    }
-    root.put("templates", templatesArr)
-
-    return root.toString(2)
-}
+private fun previewImport(json: String): SwtBridge.ImportSummary? = SwtBridge.previewImport(json)
+private fun importDataFromJson(json: String): String = SwtBridge.importFromJson(json)
+private fun exportDataToJson(): String = SwtBridge.exportToJson()

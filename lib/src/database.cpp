@@ -89,6 +89,13 @@ void Database::migrate() {
                  nullptr, nullptr, nullptr);
     sqlite3_exec(db_, "ALTER TABLE template_set ADD COLUMN weight REAL",
                  nullptr, nullptr, nullptr);
+
+    sqlite3_exec(db_, R"(
+        CREATE TABLE IF NOT EXISTS settings (
+            key   TEXT PRIMARY KEY,
+            value TEXT
+        )
+    )", nullptr, nullptr, nullptr);
 }
 
 } // namespace sf

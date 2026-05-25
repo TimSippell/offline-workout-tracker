@@ -17,6 +17,9 @@ add_library(swt STATIC
     ${SWT_ROOT}/lib/src/database.cpp
     ${SWT_ROOT}/lib/src/repository.cpp
     ${SWT_ROOT}/lib/src/calculator.cpp
+    ${SWT_ROOT}/lib/src/converter.cpp
+    ${SWT_ROOT}/lib/src/defaults.cpp
+    ${SWT_ROOT}/lib/src/data_io.cpp
 )
 target_include_directories(swt PUBLIC ${SWT_ROOT}/lib/include)
 target_link_libraries(swt PUBLIC sqlite3)

@@ -15,41 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import com.timsippell.swt.bridge.SwtBridge
 
-private data class DefaultExercise(val name: String, val category: String, val muscle: String, val type: String)
-
-private val defaultExercises = listOf(
-    DefaultExercise("Bench Press", "Barbell", "Chest", "weight"),
-    DefaultExercise("Incline Bench Press", "Barbell", "Chest", "weight"),
-    DefaultExercise("Dumbbell Fly", "Dumbbell", "Chest", "weight"),
-    DefaultExercise("Squat", "Barbell", "Legs", "weight"),
-    DefaultExercise("Front Squat", "Barbell", "Legs", "weight"),
-    DefaultExercise("Leg Press", "Machine", "Legs", "weight"),
-    DefaultExercise("Romanian Deadlift", "Barbell", "Legs", "weight"),
-    DefaultExercise("Leg Curl", "Machine", "Legs", "weight"),
-    DefaultExercise("Leg Extension", "Machine", "Legs", "weight"),
-    DefaultExercise("Calf Raise", "Machine", "Legs", "weight"),
-    DefaultExercise("Deadlift", "Barbell", "Back", "weight"),
-    DefaultExercise("Barbell Row", "Barbell", "Back", "weight"),
-    DefaultExercise("Pull Up", "Bodyweight", "Back", "weight"),
-    DefaultExercise("Lat Pulldown", "Cable", "Back", "weight"),
-    DefaultExercise("Seated Cable Row", "Cable", "Back", "weight"),
-    DefaultExercise("Overhead Press", "Barbell", "Shoulders", "weight"),
-    DefaultExercise("Lateral Raise", "Dumbbell", "Shoulders", "weight"),
-    DefaultExercise("Face Pull", "Cable", "Shoulders", "weight"),
-    DefaultExercise("Bicep Curl", "Dumbbell", "Arms", "weight"),
-    DefaultExercise("Barbell Curl", "Barbell", "Arms", "weight"),
-    DefaultExercise("Hammer Curl", "Dumbbell", "Arms", "weight"),
-    DefaultExercise("Tricep Pushdown", "Cable", "Arms", "weight"),
-    DefaultExercise("Skull Crusher", "Barbell", "Arms", "weight"),
-    DefaultExercise("Dip", "Bodyweight", "Arms", "weight"),
-    DefaultExercise("Plank", "Bodyweight", "Core", "time"),
-    DefaultExercise("Hanging Leg Raise", "Bodyweight", "Core", "weight"),
-    DefaultExercise("Cable Crunch", "Cable", "Core", "weight"),
-    DefaultExercise("Running", "Cardio", "Cardio", "time"),
-    DefaultExercise("Cycling", "Cardio", "Cardio", "time"),
-    DefaultExercise("Rowing", "Cardio", "Cardio", "time"),
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExercisesScreen(onNavigateToSetup: () -> Unit = {}) {
@@ -130,9 +95,7 @@ fun ExercisesScreen(onNavigateToSetup: () -> Unit = {}) {
             text = { Text("Would you like to start with a set of common exercises? You can always add, edit, or remove them later.") },
             confirmButton = {
                 TextButton(onClick = {
-                    defaultExercises.forEach {
-                        SwtBridge.addExercise(it.name, it.category, it.muscle, it.type)
-                    }
+                    SwtBridge.seedDefaultExercises()
                     exercises = SwtBridge.listExercises()
                     showSeedDialog = false
                     if (!AppSettings.isSetupComplete(context)) {
