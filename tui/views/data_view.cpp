@@ -3,6 +3,7 @@
 #include "../widgets/input.h"
 #include <swt/data_io.h>
 #include <fstream>
+#include <filesystem>
 
 namespace tui {
 
@@ -45,8 +46,18 @@ void DataView::do_export() {
     if (path.empty()) return;
 
     if (path[0] == '~') {
+#ifdef _WIN32
+        const char* home = getenv("USERPROFILE");
+#else
         const char* home = getenv("HOME");
+#endif
         if (home) path = std::string(home) + path.substr(1);
+    }
+
+    if (std::filesystem::is_directory(path)) {
+        if (path.back() != '/' && path.back() != '\\')
+            path += '/';
+        path += "workouts.json";
     }
 
     std::string json = sf::export_to_json(repo_);
@@ -84,7 +95,11 @@ void DataView::do_import() {
     if (path.empty()) return;
 
     if (path[0] == '~') {
+#ifdef _WIN32
+        const char* home = getenv("USERPROFILE");
+#else
         const char* home = getenv("HOME");
+#endif
         if (home) path = std::string(home) + path.substr(1);
     }
 

@@ -10,9 +10,17 @@ int main(int argc, char* argv[]) {
     if (argc > 1) {
         db_path = argv[1];
     } else {
+#ifdef _WIN32
+        const char* home = std::getenv("APPDATA");
+#else
         const char* home = std::getenv("HOME");
+#endif
         if (home) {
+#ifdef _WIN32
+            fs::path dir = fs::path(home) / "simple-workout-tracker";
+#else
             fs::path dir = fs::path(home) / ".local" / "share" / "simple-workout-tracker";
+#endif
             fs::create_directories(dir);
             db_path = (dir / "workouts.db").string();
         } else {

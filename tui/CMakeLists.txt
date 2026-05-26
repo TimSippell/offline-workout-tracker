@@ -1,4 +1,14 @@
-find_package(Curses REQUIRED)
+if(WIN32)
+    find_path(PDCURSES_INCLUDE_DIR curses.h)
+    find_library(PDCURSES_LIBRARY NAMES pdcurses)
+    if(NOT PDCURSES_INCLUDE_DIR OR NOT PDCURSES_LIBRARY)
+        message(FATAL_ERROR "PDCurses not found. Install via: vcpkg install pdcurses")
+    endif()
+    set(CURSES_INCLUDE_DIRS ${PDCURSES_INCLUDE_DIR})
+    set(CURSES_LIBRARIES ${PDCURSES_LIBRARY})
+else()
+    find_package(Curses REQUIRED)
+endif()
 
 add_executable(simple-workout-tracker
     main.cpp

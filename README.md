@@ -34,7 +34,7 @@ The core logic lives in a shared C++ library (`lib/`) backed by SQLite. This lib
 
 ### TUI (`tui/`)
 
-- ncurses
+- ncurses (Linux/macOS) or PDCurses (Windows)
 
 ### Android app (`android/`)
 
@@ -50,6 +50,21 @@ The core logic lives in a shared C++ library (`lib/`) backed by SQLite. This lib
 ```sh
 ./build-linux.sh            # release build (default)
 ./build-linux.sh debug      # debug build
+```
+
+### Windows (TUI)
+
+Requires [vcpkg](https://vcpkg.io/) with PDCurses and SQLite3 installed:
+
+```sh
+vcpkg install pdcurses sqlite3
+```
+
+Set `VCPKG_ROOT` environment variable, then:
+
+```sh
+build-windows.bat            # release build (default)
+build-windows.bat debug      # debug build
 ```
 
 ### Android APK
