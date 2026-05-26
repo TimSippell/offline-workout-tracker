@@ -57,11 +57,22 @@ fun TemplatesScreen(navController: NavController) {
             }
             if (templates.isEmpty()) {
                 item {
-                    Text(
-                        "No templates yet. Tap + to create one.",
-                        modifier = Modifier.padding(32.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Column(
+                        modifier = Modifier.padding(32.dp).fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            "No templates yet. Tap + to create one, or load some recommended templates to get started.",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        OutlinedButton(onClick = {
+                            SwtBridge.seedDefaultTemplates()
+                            templates = SwtBridge.listTemplates()
+                        }) {
+                            Text("Load recommended templates")
+                        }
+                    }
                 }
             }
         }

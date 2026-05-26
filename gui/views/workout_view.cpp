@@ -108,25 +108,6 @@ void WorkoutView::render_active_workout() {
     ImGui::Separator();
     ImGui::Spacing();
 
-    if (ImGui::Button("Select Exercise")) {
-        show_exercise_picker_ = true;
-        picker_exercises_ = repo_.list_exercises();
-        std::memset(picker_filter_, 0, sizeof(picker_filter_));
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Add Set")) {
-        if (current_exercise_id_ == 0) {
-            show_exercise_picker_ = true;
-            picker_exercises_ = repo_.list_exercises();
-            std::memset(picker_filter_, 0, sizeof(picker_filter_));
-        } else {
-            show_add_set_ = true;
-            std::memset(set_reps_buf_, 0, sizeof(set_reps_buf_));
-            std::memset(set_weight_buf_, 0, sizeof(set_weight_buf_));
-            std::memset(set_rpe_buf_, 0, sizeof(set_rpe_buf_));
-        }
-    }
-    ImGui::SameLine();
     if (ImGui::Button("Finish Workout")) {
         repo_.finish_workout(workout_id_);
         workout_id_ = 0;
@@ -134,6 +115,7 @@ void WorkoutView::render_active_workout() {
         current_exercise_name_.clear();
         set_count_ = 0;
         sets_.clear();
+        if (on_finish_) on_finish_();
         return;
     }
     ImGui::SameLine();

@@ -13,6 +13,7 @@ public:
 
 private:
     void render_add_popup();
+    void render_edit_popup();
     void render_detail_popup();
 
     sf::Repository& repo_;
@@ -23,11 +24,22 @@ private:
     char filter_buf_[128] = {};
 
     bool show_add_ = false;
+    bool open_add_ = false;
     char add_name_[128] = {};
     int add_category_ = 0;
     int add_muscle_ = 0;
+    int add_tracking_ = 0;
+
+    bool show_edit_ = false;
+    bool open_edit_ = false;
+    sf::Exercise edit_exercise_;
+    char edit_name_[128] = {};
+    int edit_category_ = 0;
+    int edit_muscle_ = 0;
+    int edit_tracking_ = 0;
 
     bool show_detail_ = false;
+    bool open_detail_ = false;
     sf::Exercise detail_exercise_;
     sf::ExerciseStats detail_stats_;
 };

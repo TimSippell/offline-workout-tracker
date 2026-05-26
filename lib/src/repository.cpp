@@ -412,6 +412,15 @@ void Repository::update_template(const WorkoutTemplate& t) {
     sqlite3_step(raw);
 }
 
+void Repository::clear_template_ref(int64_t template_id) {
+    const char* sql = "UPDATE workout SET template_id = NULL WHERE template_id = ?";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+    sqlite3_bind_int64(raw, 1, template_id);
+    sqlite3_step(raw);
+}
+
 void Repository::delete_template(int64_t id) {
     const char* sql = "DELETE FROM workout_template WHERE id=?";
     sqlite3_stmt* raw = nullptr;

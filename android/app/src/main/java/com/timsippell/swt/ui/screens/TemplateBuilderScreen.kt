@@ -49,7 +49,7 @@ fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(sets.size, key = { sets[it].id }) { index ->
@@ -127,10 +127,9 @@ private fun TemplateSetCard(
                 Text(exerciseName, style = MaterialTheme.typography.titleSmall)
                 Text(
                     buildString {
-                        append("Set ${set.order}")
-                        if (set.reps > 0) append(" • ${set.reps} reps")
-                        if (set.weight > 0) append(" × ${"%.1f".format(AppSettings.toDisplayWeight(set.weight, context))} $weightUnit")
-                        if (set.rpe > 0) append(" @RPE ${set.rpe}")
+                        if (set.reps > 0) append("${set.reps} reps")
+                        if (set.weight > 0) { if (isNotEmpty()) append(" • "); append("${"%.1f".format(AppSettings.toDisplayWeight(set.weight, context))} $weightUnit") }
+                        if (set.rpe > 0) { if (isNotEmpty()) append(" • "); append("@RPE ${set.rpe}") }
                     },
                     style = MaterialTheme.typography.bodyMedium
                 )

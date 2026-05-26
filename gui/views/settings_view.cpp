@@ -174,6 +174,7 @@ void SettingsView::render_danger_zone() {
                     reset_done_ = true;
                     loaded_ = false;
                     weight_unit_ = 0;
+                    if (on_reset_) on_reset_();
                 }
                 ImGui::PopStyleColor(3);
 
