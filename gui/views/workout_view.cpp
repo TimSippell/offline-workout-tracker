@@ -120,6 +120,7 @@ void WorkoutView::render_active_workout() {
     }
     ImGui::SameLine();
     if (ImGui::Button("Cancel")) {
+        repo_.delete_workout(workout_id_);
         workout_id_ = 0;
         current_exercise_id_ = 0;
         current_exercise_name_.clear();

@@ -20,11 +20,12 @@ App::App(sf::Database& db)
         history_view_.refresh();
         exercise_view_.refresh();
         progress_view_.refresh();
+        first_run_checked_ = false;
     });
 }
 
 void App::render() {
-    if (!first_run_checked_) {
+    if (!first_run_checked_ && current_screen_ != Screen::Settings) {
         check_first_run();
         first_run_checked_ = true;
     }
@@ -60,7 +61,10 @@ void App::render() {
     ImGui::End();
 
     if (show_seed_popup_) {
-        ImGui::OpenPopup("Welcome");
+        if (open_seed_popup_) {
+            ImGui::OpenPopup("Welcome");
+            open_seed_popup_ = false;
+        }
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowSize(ImVec2(400, 160));
@@ -118,6 +122,7 @@ void App::check_first_run() {
         auto templates = repo_.list_templates();
         if (exercises.empty() && templates.empty()) {
             show_seed_popup_ = true;
+            open_seed_popup_ = true;
         } else {
             repo_.set_setup_complete(true);
         }

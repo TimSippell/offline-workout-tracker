@@ -33,6 +33,7 @@ private:
 
     bool first_run_checked_ = false;
     bool show_seed_popup_ = false;
+    bool open_seed_popup_ = false;
 };
 
 } // namespace gui
