@@ -38,7 +38,7 @@ void ExerciseView::run() {
         int ch = wgetch(win_);
 
         switch (ch) {
-            case 'q': running = false; break;
+            case 27: case 'q': running = false; break;
             case 'a': add_exercise(); break;
             case 'd':
                 if (!exercises.empty() && table.selected() < static_cast<int>(exercises.size())) {

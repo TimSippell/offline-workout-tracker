@@ -44,7 +44,7 @@ void ProgressView::run() {
 
         int ch = wgetch(win_);
         switch (ch) {
-            case 'q': running = false; break;
+            case 27: case 'q': running = false; break;
             case 'j': case KEY_DOWN:
                 if (selected < static_cast<int>(exercises.size()) - 1) selected++;
                 break;

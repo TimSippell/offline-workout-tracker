@@ -1,6 +1,15 @@
 #include <gtest/gtest.h>
 #include "test_helpers.h"
 #include <swt/data_io.h>
+#include <sstream>
+
+namespace {
+std::string export_json(sf::Repository& repo, sf::ExportScope scope = sf::ExportScope::All) {
+    std::ostringstream ss;
+    sf::export_to_json(repo, ss, scope);
+    return ss.str();
+}
+}
 
 class DataIOTest : public ::testing::Test {
 protected:
@@ -8,7 +17,7 @@ protected:
 };
 
 TEST_F(DataIOTest, ExportEmptyDB) {
-    auto json = sf::export_to_json(f.repo);
+    auto json = export_json(f.repo);
     EXPECT_NE(json.find("\"exercises\":"), std::string::npos);
     EXPECT_NE(json.find("\"workouts\":"), std::string::npos);
     EXPECT_NE(json.find("\"templates\":"), std::string::npos);
@@ -18,7 +27,7 @@ TEST_F(DataIOTest, ExportWithData) {
     sf::Exercise ex; ex.name = "Bench Press"; ex.category = "Barbell";
     f.repo.add_exercise(ex);
 
-    auto json = sf::export_to_json(f.repo);
+    auto json = export_json(f.repo);
     EXPECT_NE(json.find("Bench Press"), std::string::npos);
     EXPECT_NE(json.find("Barbell"), std::string::npos);
 }
@@ -27,7 +36,7 @@ TEST_F(DataIOTest, ExportEscapesSpecialChars) {
     sf::Exercise ex; ex.name = "Bench \"Press\""; ex.category = "Bar\\bell";
     f.repo.add_exercise(ex);
 
-    auto json = sf::export_to_json(f.repo);
+    auto json = export_json(f.repo);
     EXPECT_NE(json.find("Bench \\\"Press\\\""), std::string::npos);
     EXPECT_NE(json.find("Bar\\\\bell"), std::string::npos);
 }
@@ -46,7 +55,7 @@ TEST_F(DataIOTest, RoundTrip) {
     f.repo.add_set(ws);
     f.repo.finish_workout(wid);
 
-    auto json = sf::export_to_json(f.repo);
+    auto json = export_json(f.repo);
 
     TestFixture f2;
     auto result = sf::import_from_json(f2.repo, json);

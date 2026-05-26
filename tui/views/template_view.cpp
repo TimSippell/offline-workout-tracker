@@ -40,7 +40,7 @@ void TemplateView::run() {
         auto templates_now = repo_.list_templates();
 
         switch (ch) {
-            case 'q': running = false; break;
+            case 27: case 'q': running = false; break;
             case 'a': create_template(); break;
             case 'd':
                 if (!templates_now.empty() && selected < static_cast<int>(templates_now.size())) {
@@ -123,7 +123,7 @@ void TemplateView::edit_template(int64_t template_id) {
 
         int ch = wgetch(win_);
         switch (ch) {
-            case 'q': editing = false; break;
+            case 27: case 'q': editing = false; break;
             case 'a': add_exercise_to_template(template_id); break;
             case 'j': case KEY_DOWN:
                 if (selected < static_cast<int>(sets.size()) - 1) selected++;

@@ -2,6 +2,9 @@
 
 #include <ncurses.h>
 #include <swt/swt.h>
+#include <swt/data_io.h>
+#include <optional>
+#include <string>
 
 namespace tui {
 
@@ -13,6 +16,9 @@ public:
 private:
     void do_export();
     void do_import();
+    std::optional<sf::ExportScope> pick_scope(const std::string& action);
+    static std::string expand_path(const std::string& raw);
+    static bool is_valid_path(const std::string& path);
 
     WINDOW* win_;
     sf::Repository& repo_;

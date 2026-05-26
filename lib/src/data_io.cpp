@@ -1,5 +1,5 @@
 #include "swt/data_io.h"
-#include <sstream>
+#include <ostream>
 #include <map>
 #include <stdexcept>
 #include <cctype>
@@ -182,82 +182,104 @@ private:
 
 } // namespace
 
-std::string export_to_json(Repository& repo) {
-    std::ostringstream out;
+void export_to_json(Repository& repo, std::ostream& out, ExportScope scope) {
+    bool include_exercises = scope == ExportScope::ExercisesAndWorkouts || scope == ExportScope::All;
+    bool include_workouts = true;
+    bool include_templates = scope == ExportScope::All;
+
     out << "{\n";
+    bool needs_comma = false;
 
-    // Exercises
-    out << "  \"exercises\": [\n";
-    auto exercises = repo.list_exercises();
-    for (size_t i = 0; i < exercises.size(); i++) {
-        auto& ex = exercises[i];
-        out << "    {\"id\": " << ex.id
-            << ", \"name\": \"" << escape_json(ex.name) << "\""
-            << ", \"category\": \"" << escape_json(ex.category) << "\""
-            << ", \"muscleGroup\": \"" << escape_json(ex.muscle_group) << "\""
-            << ", \"type\": \"" << escape_json(ex.notes) << "\""
-            << "}";
-        if (i + 1 < exercises.size()) out << ",";
-        out << "\n";
-    }
-    out << "  ],\n";
-
-    // Workouts
-    out << "  \"workouts\": [\n";
-    auto workouts = repo.list_workouts(10000, 0);
-    for (size_t i = 0; i < workouts.size(); i++) {
-        auto& w = workouts[i];
-        out << "    {\"id\": " << w.id
-            << ", \"name\": \"" << escape_json(w.name) << "\""
-            << ", \"startedAt\": \"" << escape_json(w.started_at) << "\""
-            << ", \"finishedAt\": \"" << escape_json(w.finished_at) << "\""
-            << ", \"sets\": [";
-
-        auto sets = repo.get_sets_for_workout(w.id);
-        for (size_t j = 0; j < sets.size(); j++) {
-            auto& s = sets[j];
-            out << "{\"exerciseId\": " << s.exercise_id
-                << ", \"order\": " << s.set_order
-                << ", \"reps\": " << s.reps.value_or(0)
-                << ", \"weight\": " << s.weight.value_or(0.0)
-                << ", \"rpe\": " << s.rpe.value_or(0.0)
+    if (include_exercises) {
+        out << "  \"exercises\": [\n";
+        auto exercises = repo.list_exercises();
+        for (size_t i = 0; i < exercises.size(); i++) {
+            auto& ex = exercises[i];
+            out << "    {\"id\": " << ex.id
+                << ", \"name\": \"" << escape_json(ex.name) << "\""
+                << ", \"category\": \"" << escape_json(ex.category) << "\""
+                << ", \"muscleGroup\": \"" << escape_json(ex.muscle_group) << "\""
+                << ", \"type\": \"" << escape_json(ex.notes) << "\""
                 << "}";
-            if (j + 1 < sets.size()) out << ", ";
+            if (i + 1 < exercises.size()) out << ",";
+            out << "\n";
         }
-        out << "]}";
-        if (i + 1 < workouts.size()) out << ",";
-        out << "\n";
+        out << "  ]";
+        needs_comma = true;
     }
-    out << "  ],\n";
 
-    // Templates
-    out << "  \"templates\": [\n";
-    auto templates = repo.list_templates();
-    for (size_t i = 0; i < templates.size(); i++) {
-        auto& t = templates[i];
-        out << "    {\"id\": " << t.id
-            << ", \"name\": \"" << escape_json(t.name) << "\""
-            << ", \"sets\": [";
+    if (include_workouts) {
+        if (needs_comma) out << ",";
+        out << "\n  \"workouts\": [\n";
+        auto workouts = repo.list_workouts(10000, 0);
+        for (size_t i = 0; i < workouts.size(); i++) {
+            auto& w = workouts[i];
+            out << "    {\"id\": " << w.id
+                << ", \"name\": \"" << escape_json(w.name) << "\""
+                << ", \"startedAt\": \"" << escape_json(w.started_at) << "\""
+                << ", \"finishedAt\": \"" << escape_json(w.finished_at) << "\""
+                << ", \"sets\": [";
 
-        auto sets = repo.get_template_sets(t.id);
-        for (size_t j = 0; j < sets.size(); j++) {
-            auto& s = sets[j];
-            out << "{\"exerciseId\": " << s.exercise_id
-                << ", \"order\": " << s.set_order
-                << ", \"reps\": " << s.reps.value_or(0)
-                << ", \"weight\": " << s.weight.value_or(0.0)
-                << ", \"rpe\": " << s.rpe.value_or(0.0)
-                << "}";
-            if (j + 1 < sets.size()) out << ", ";
+            auto sets = repo.get_sets_for_workout(w.id);
+            for (size_t j = 0; j < sets.size(); j++) {
+                auto& s = sets[j];
+                out << "{\"exerciseId\": " << s.exercise_id
+                    << ", \"order\": " << s.set_order
+                    << ", \"reps\": " << s.reps.value_or(0)
+                    << ", \"weight\": " << s.weight.value_or(0.0)
+                    << ", \"rpe\": " << s.rpe.value_or(0.0)
+                    << "}";
+                if (j + 1 < sets.size()) out << ", ";
+            }
+            out << "]}";
+            if (i + 1 < workouts.size()) out << ",";
+            out << "\n";
         }
-        out << "]}";
-        if (i + 1 < templates.size()) out << ",";
-        out << "\n";
+        out << "  ]";
+        needs_comma = true;
     }
-    out << "  ]\n";
 
-    out << "}\n";
-    return out.str();
+    if (include_templates) {
+        if (needs_comma) out << ",";
+        out << "\n  \"templates\": [\n";
+        auto templates = repo.list_templates();
+        for (size_t i = 0; i < templates.size(); i++) {
+            auto& t = templates[i];
+            out << "    {\"id\": " << t.id
+                << ", \"name\": \"" << escape_json(t.name) << "\""
+                << ", \"sets\": [";
+
+            auto sets = repo.get_template_sets(t.id);
+            for (size_t j = 0; j < sets.size(); j++) {
+                auto& s = sets[j];
+                out << "{\"exerciseId\": " << s.exercise_id
+                    << ", \"order\": " << s.set_order
+                    << ", \"reps\": " << s.reps.value_or(0)
+                    << ", \"weight\": " << s.weight.value_or(0.0)
+                    << ", \"rpe\": " << s.rpe.value_or(0.0)
+                    << "}";
+                if (j + 1 < sets.size()) out << ", ";
+            }
+            out << "]}";
+            if (i + 1 < templates.size()) out << ",";
+            out << "\n";
+        }
+        out << "  ]";
+    }
+
+    out << "\n}\n";
+}
+
+ExportScope detect_import_scope(const std::string& json) {
+    JParser parser(json);
+    auto root = parser.parse();
+
+    bool has_exercises = root.obj.count("exercises") && !root.get_array("exercises").empty();
+    bool has_templates = root.obj.count("templates") && !root.get_array("templates").empty();
+
+    if (has_exercises && has_templates) return ExportScope::All;
+    if (has_exercises) return ExportScope::ExercisesAndWorkouts;
+    return ExportScope::History;
 }
 
 ImportSummary preview_import(Repository& repo, const std::string& json) {
@@ -297,6 +319,7 @@ ImportResult import_from_json(Repository& repo, const std::string& json) {
     std::map<std::string, int64_t> existing_map;
     for (auto& ex : existing) existing_map[ex.name] = ex.id;
 
+    ImportResult result;
     std::map<int64_t, int64_t> exercise_id_map;
 
     for (auto& ex_val : root.get_array("exercises")) {
@@ -314,10 +337,9 @@ ImportResult import_from_json(Repository& repo, const std::string& json) {
             int64_t new_id = repo.add_exercise(ex);
             exercise_id_map[old_id] = new_id;
             existing_map[name] = new_id;
+            result.exercises++;
         }
     }
-
-    ImportResult result;
 
     for (auto& wo : root.get_array("workouts")) {
         auto name = wo.get_string("name");

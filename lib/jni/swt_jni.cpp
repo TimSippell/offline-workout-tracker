@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <string>
+#include <sstream>
 #include <android/log.h>
 #include "swt/swt.h"
 
@@ -420,7 +421,9 @@ Java_com_timsippell_swt_bridge_SwtBridge_nativeSeedDefaultTemplates(JNIEnv*, job
 JNIEXPORT jstring JNICALL
 Java_com_timsippell_swt_bridge_SwtBridge_nativeExportToJson(JNIEnv* env, jobject) {
     if (!g_repo) return env->NewStringUTF("{}");
-    return env->NewStringUTF(sf::export_to_json(*g_repo).c_str());
+    std::ostringstream ss;
+    sf::export_to_json(*g_repo, ss);
+    return env->NewStringUTF(ss.str().c_str());
 }
 
 JNIEXPORT jobject JNICALL

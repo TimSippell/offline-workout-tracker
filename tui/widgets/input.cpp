@@ -1,5 +1,6 @@
 #include "input.h"
 #include <cstdlib>
+#include <algorithm>
 
 namespace tui {
 
@@ -7,16 +8,48 @@ std::string get_string_input(WINDOW* win, int y, int x, const std::string& promp
     mvwprintw(win, y, x, "%s", prompt.c_str());
     wrefresh(win);
 
-    echo();
     curs_set(1);
+    keypad(win, TRUE);
 
-    char buf[256] = {};
-    int len = std::min(max_len, 255);
-    mvwgetnstr(win, y, x + static_cast<int>(prompt.size()), buf, len);
+    std::string buf;
+    int cursor = 0;
+    int px = x + static_cast<int>(prompt.size());
+    int limit = std::min(max_len, 255);
 
-    noecho();
+    while (true) {
+        mvwprintw(win, y, px, "%-*s", limit, buf.c_str());
+        wmove(win, y, px + cursor);
+        wrefresh(win);
+
+        int ch = wgetch(win);
+        if (ch == 27) {
+            curs_set(0);
+            return "";
+        }
+        if (ch == '\n' || ch == KEY_ENTER) {
+            break;
+        }
+        if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
+            if (cursor > 0) {
+                buf.erase(cursor - 1, 1);
+                cursor--;
+            }
+        } else if (ch == KEY_LEFT) {
+            if (cursor > 0) cursor--;
+        } else if (ch == KEY_RIGHT) {
+            if (cursor < static_cast<int>(buf.size())) cursor++;
+        } else if (ch == KEY_HOME || ch == 1) {
+            cursor = 0;
+        } else if (ch == KEY_END || ch == 5) {
+            cursor = static_cast<int>(buf.size());
+        } else if (ch >= 32 && ch < 127 && static_cast<int>(buf.size()) < limit) {
+            buf.insert(buf.begin() + cursor, static_cast<char>(ch));
+            cursor++;
+        }
+    }
+
     curs_set(0);
-    return std::string(buf);
+    return buf;
 }
 
 std::optional<int> get_int_input(WINDOW* win, int y, int x, const std::string& prompt) {

@@ -39,7 +39,7 @@ void HistoryView::run() {
 
         int ch = wgetch(win_);
         switch (ch) {
-            case 'q': running = false; break;
+            case 27: case 'q': running = false; break;
             case '\n': case KEY_ENTER:
                 if (!workouts.empty()) {
                     show_workout_detail(workouts[table.selected()].id);

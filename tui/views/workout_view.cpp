@@ -18,7 +18,7 @@ bool WorkoutView::choose_start_mode() {
     wrefresh(win_);
 
     int ch = wgetch(win_);
-    if (ch == 'q') return false;
+    if (ch == 'q' || ch == 27) return false;
 
     if (ch == '2') {
         auto templates = repo_.list_templates();
@@ -100,7 +100,7 @@ void WorkoutView::run() {
                 repo_.finish_workout(workout_id_);
                 running = false;
                 break;
-            case 'q':
+            case 27: case 'q':
                 running = false;
                 break;
         }
