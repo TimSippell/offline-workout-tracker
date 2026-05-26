@@ -1,11 +1,15 @@
 # Simple Workout Tracker
 
-A minimal, offline-first workout tracker for Android. Built with a C++ core library and a Kotlin/Jetpack Compose UI.
+A minimal, offline-first workout tracker. Built with a shared C++ core library, an Android app (Kotlin/Jetpack Compose), and a cross-platform desktop GUI (ImGui).
 
 <p align="center">
   <img src="screenshots/Workout.png" alt="Active workout" width="270">
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="screenshots/Exercises.png" alt="Exercise library" width="270">
+</p>
+
+<p align="center">
+  <img src="screenshots/Desktop.png" alt="Desktop GUI" width="600">
 </p>
 
 ## Features
@@ -22,6 +26,7 @@ A minimal, offline-first workout tracker for Android. Built with a C++ core libr
 The core logic lives in a shared C++ library (`lib/`) backed by SQLite. This library is used by:
 
 - **Android app** — Kotlin + Jetpack Compose, calls the C++ lib via JNI
+- **Desktop GUI** — cross-platform ImGui + OpenGL interface
 - **TUI** — terminal interface for desktop use
 
 ## Dependencies
@@ -31,6 +36,12 @@ The core logic lives in a shared C++ library (`lib/`) backed by SQLite. This lib
 - C++20 compiler (GCC 10+, Clang 12+)
 - CMake 3.16+
 - SQLite 3
+
+### Desktop GUI (`gui/`)
+
+- GLFW 3
+- OpenGL 3+
+- ImGui and ImPlot (included in `extern/`)
 
 ### TUI (`tui/`)
 
@@ -45,7 +56,7 @@ The core logic lives in a shared C++ library (`lib/`) backed by SQLite. This lib
 
 ## Building
 
-### Linux (TUI)
+### Linux (GUI + TUI)
 
 ```sh
 ./build-linux.sh            # release build (default)
