@@ -48,6 +48,7 @@ public:
     void update_template_set(const TemplateSet& s);
     void delete_template_set(int64_t id);
     std::vector<TemplateSet> get_template_sets(int64_t template_id);
+    void swap_template_set_order(int64_t id_a, int order_a, int64_t id_b, int order_b);
 
     // Start workout from template
     int64_t start_workout_from_template(int64_t template_id, const std::string& name = "");

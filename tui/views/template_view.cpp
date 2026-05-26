@@ -80,6 +80,7 @@ void TemplateView::create_template() {
 
 void TemplateView::edit_template(int64_t template_id) {
     bool editing = true;
+    int selected = 0;
 
     while (editing) {
         werase(win_);
@@ -93,30 +94,64 @@ void TemplateView::edit_template(int64_t template_id) {
         wattroff(win_, A_BOLD);
 
         auto sets = repo_.get_template_sets(template_id);
+        if (selected >= static_cast<int>(sets.size()))
+            selected = std::max(0, static_cast<int>(sets.size()) - 1);
+
         if (sets.empty()) {
             mvwprintw(win_, 3, 2, "No exercises. Press 'a' to add.");
         } else {
             int row = 3;
             mvwprintw(win_, row++, 2, "%-4s %-20s %5s %4s", "#", "Exercise", "Reps", "RPE");
-            for (const auto& s : sets) {
+            for (int i = 0; i < static_cast<int>(sets.size()); i++) {
+                if (row >= getmaxy(win_) - 3) break;
+                const auto& s = sets[i];
                 auto ex = repo_.get_exercise(s.exercise_id);
                 std::string ex_name = ex ? ex->name : "?";
                 if (ex_name.size() > 20) ex_name.resize(20);
                 std::string reps_s = s.reps ? std::to_string(*s.reps) : "-";
                 std::string rpe_s = s.rpe ? std::format("{:.0f}", *s.rpe) : "-";
-                mvwprintw(win_, row++, 2, "%-4d %-20s %5s %4s",
+                if (i == selected) wattron(win_, A_REVERSE);
+                mvwprintw(win_, row, 2, "%-4d %-20s %5s %4s",
                           s.set_order, ex_name.c_str(), reps_s.c_str(), rpe_s.c_str());
-                if (row >= getmaxy(win_) - 3) break;
+                if (i == selected) wattroff(win_, A_REVERSE);
+                row++;
             }
         }
 
-        mvwprintw(win_, getmaxy(win_) - 2, 2, "a:add exercise | q:done");
+        mvwprintw(win_, getmaxy(win_) - 2, 2, "a:add d:delete J/K:move j/k:nav q:done");
         wrefresh(win_);
 
         int ch = wgetch(win_);
         switch (ch) {
             case 'q': editing = false; break;
             case 'a': add_exercise_to_template(template_id); break;
+            case 'j': case KEY_DOWN:
+                if (selected < static_cast<int>(sets.size()) - 1) selected++;
+                break;
+            case 'k': case KEY_UP:
+                if (selected > 0) selected--;
+                break;
+            case 'J':
+                if (!sets.empty() && selected < static_cast<int>(sets.size()) - 1) {
+                    repo_.swap_template_set_order(
+                        sets[selected].id, sets[selected].set_order,
+                        sets[selected + 1].id, sets[selected + 1].set_order);
+                    selected++;
+                }
+                break;
+            case 'K':
+                if (!sets.empty() && selected > 0) {
+                    repo_.swap_template_set_order(
+                        sets[selected].id, sets[selected].set_order,
+                        sets[selected - 1].id, sets[selected - 1].set_order);
+                    selected--;
+                }
+                break;
+            case 'd':
+                if (!sets.empty() && selected < static_cast<int>(sets.size())) {
+                    repo_.delete_template_set(sets[selected].id);
+                }
+                break;
         }
     }
 }

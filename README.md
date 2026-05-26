@@ -24,9 +24,35 @@ The core logic lives in a shared C++ library (`lib/`) backed by SQLite. This lib
 - **Android app** — Kotlin + Jetpack Compose, calls the C++ lib via JNI
 - **TUI** — terminal interface for desktop use
 
-## Building the Android APK
+## Dependencies
 
-Requirements: Android SDK, NDK, CMake.
+### Core library (`lib/`)
+
+- C++20 compiler (GCC 10+, Clang 12+)
+- CMake 3.16+
+- SQLite 3
+
+### TUI (`tui/`)
+
+- ncurses
+
+### Android app (`android/`)
+
+- Android SDK (API 35) + NDK
+- Gradle 8.11+
+- Kotlin 2.1 + Jetpack Compose
+- Java 17
+
+## Building
+
+### Linux (TUI)
+
+```sh
+./build-linux.sh            # release build (default)
+./build-linux.sh debug      # debug build
+```
+
+### Android APK
 
 ```sh
 ./build-android.sh          # release build (default)

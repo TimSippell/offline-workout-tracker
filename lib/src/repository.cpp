@@ -471,6 +471,24 @@ void Repository::delete_template_set(int64_t id) {
     sqlite3_step(raw);
 }
 
+void Repository::swap_template_set_order(int64_t id_a, int order_a, int64_t id_b, int order_b) {
+    const char* sql = "UPDATE template_set SET set_order=? WHERE id=?";
+    sqlite3_stmt* raw = nullptr;
+
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt1{raw};
+    sqlite3_bind_int(raw, 1, order_b);
+    sqlite3_bind_int64(raw, 2, id_a);
+    sqlite3_step(raw);
+
+    raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt2{raw};
+    sqlite3_bind_int(raw, 1, order_a);
+    sqlite3_bind_int64(raw, 2, id_b);
+    sqlite3_step(raw);
+}
+
 std::vector<TemplateSet> Repository::get_template_sets(int64_t template_id) {
     const char* sql = "SELECT id, template_id, exercise_id, set_order, reps, weight, rpe, rest_secs, tempo, notes FROM template_set WHERE template_id=? ORDER BY set_order";
     sqlite3_stmt* raw = nullptr;

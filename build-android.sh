@@ -41,18 +41,11 @@ if [ ! -f "$ANDROID_DIR/gradlew" ]; then
     if command -v gradle &>/dev/null; then
         gradle wrapper --gradle-version 8.11.1
     else
-        # Download wrapper jar directly
-        mkdir -p gradle/wrapper
-        WRAPPER_URL="https://raw.githubusercontent.com/gradle/gradle/v8.11.1/gradle/wrapper/gradle-wrapper.jar"
-        curl -sL "https://services.gradle.org/distributions/gradle-8.11.1-bin.zip" -o /dev/null
-        cat > gradlew << 'GRADLEW'
-#!/bin/sh
-exec java -jar "$(dirname "$0")/gradle/wrapper/gradle-wrapper.jar" "$@"
-GRADLEW
-        chmod +x gradlew
-        # Use sdkmanager's gradle or download wrapper jar
-        echo "WARNING: gradle not found. Install Gradle or download wrapper jar manually."
-        echo "Place gradle-wrapper.jar in android/gradle/wrapper/"
+        echo "ERROR: gradle not found. Install Gradle to generate the wrapper."
+        echo "  Arch:          sudo pacman -S gradle"
+        echo "  Ubuntu/Debian: sudo apt install gradle"
+        echo "  SDKMAN:        sdk install gradle 8.11.1"
+        exit 1
     fi
     cd "$SCRIPT_DIR"
 fi

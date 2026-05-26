@@ -7,6 +7,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -50,11 +52,24 @@ fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(sets, key = { it.id }) { set ->
+            items(sets.size, key = { sets[it].id }) { index ->
+                val set = sets[index]
                 val exerciseName = exercises.find { it.id == set.exerciseId }?.name ?: "Unknown"
                 TemplateSetCard(
                     exerciseName = exerciseName,
                     set = set,
+                    isFirst = index == 0,
+                    isLast = index == sets.size - 1,
+                    onMoveUp = {
+                        val prev = sets[index - 1]
+                        SwtBridge.swapTemplateSetOrder(set.id, set.order, prev.id, prev.order)
+                        sets = SwtBridge.getTemplateSets(templateId)
+                    },
+                    onMoveDown = {
+                        val next = sets[index + 1]
+                        SwtBridge.swapTemplateSetOrder(set.id, set.order, next.id, next.order)
+                        sets = SwtBridge.getTemplateSets(templateId)
+                    },
                     onDelete = {
                         SwtBridge.deleteTemplateSet(set.id)
                         sets = SwtBridge.getTemplateSets(templateId)
@@ -95,13 +110,17 @@ fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
 private fun TemplateSetCard(
     exerciseName: String,
     set: SwtBridge.TemplateSet,
+    isFirst: Boolean,
+    isLast: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
     onDelete: () -> Unit
 ) {
     val context = LocalContext.current
     val weightUnit = remember { AppSettings.getWeightUnit(context) }
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp, end = 4.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -115,6 +134,14 @@ private fun TemplateSetCard(
                     },
                     style = MaterialTheme.typography.bodyMedium
                 )
+            }
+            Column {
+                IconButton(onClick = onMoveUp, enabled = !isFirst, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move up")
+                }
+                IconButton(onClick = onMoveDown, enabled = !isLast, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move down")
+                }
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Remove")

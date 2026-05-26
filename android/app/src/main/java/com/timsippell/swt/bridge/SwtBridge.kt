@@ -120,6 +120,8 @@ object SwtBridge {
     fun addTemplateSet(templateId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double): Long =
         nativeAddTemplateSet(templateId, exerciseId, order, reps, weight, rpe)
     fun deleteTemplateSet(id: Long) = nativeDeleteTemplateSet(id)
+    fun swapTemplateSetOrder(idA: Long, orderA: Int, idB: Long, orderB: Int) =
+        nativeSwapTemplateSetOrder(idA, orderA, idB, orderB)
     fun startWorkoutFromTemplate(templateId: Long, name: String = ""): Long =
         nativeStartWorkoutFromTemplate(templateId, name)
 
@@ -169,6 +171,7 @@ object SwtBridge {
     private external fun nativeDeleteTemplate(id: Long)
     private external fun nativeAddTemplateSet(templateId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double): Long
     private external fun nativeDeleteTemplateSet(id: Long)
+    private external fun nativeSwapTemplateSetOrder(idA: Long, orderA: Int, idB: Long, orderB: Int)
     private external fun nativeStartWorkoutFromTemplate(templateId: Long, name: String): Long
     private external fun nativeGetStats(exerciseId: Long): ExerciseStats?
     private external fun nativeGetProgression(exerciseId: Long, sessions: Int): Array<ProgressionPoint>?

@@ -295,6 +295,12 @@ Java_com_timsippell_swt_bridge_SwtBridge_nativeDeleteTemplateSet(JNIEnv*, jobjec
     if (g_repo) g_repo->delete_template_set(id);
 }
 
+JNIEXPORT void JNICALL
+Java_com_timsippell_swt_bridge_SwtBridge_nativeSwapTemplateSetOrder(JNIEnv*, jobject,
+        jlong idA, jint orderA, jlong idB, jint orderB) {
+    if (g_repo) g_repo->swap_template_set_order(idA, orderA, idB, orderB);
+}
+
 JNIEXPORT jlong JNICALL
 Java_com_timsippell_swt_bridge_SwtBridge_nativeStartWorkoutFromTemplate(JNIEnv* env, jobject,
         jlong templateId, jstring name) {
