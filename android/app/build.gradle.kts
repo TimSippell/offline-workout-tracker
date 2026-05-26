@@ -1,8 +1,17 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun localProp(env: String, prop: String, default: String = "") =
+    System.getenv(env) ?: localProps.getProperty(prop, default)
 
 android {
     namespace = "com.timsippell.swt"
@@ -10,10 +19,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("SWT_KEYSTORE_FILE") ?: "../swt-release.jks")
-            storePassword = System.getenv("SWT_KEYSTORE_PASSWORD") ?: ""
-            keyAlias = System.getenv("SWT_KEY_ALIAS") ?: "swt"
-            keyPassword = System.getenv("SWT_KEY_PASSWORD") ?: ""
+            storeFile = file(localProp("SWT_KEYSTORE_FILE", "swt.keystore.file", "../swt-release.jks"))
+            storePassword = localProp("SWT_KEYSTORE_PASSWORD", "swt.keystore.password")
+            keyAlias = localProp("SWT_KEY_ALIAS", "swt.key.alias", "swt")
+            keyPassword = localProp("SWT_KEY_PASSWORD", "swt.key.password")
         }
     }
 
