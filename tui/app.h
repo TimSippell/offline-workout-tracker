@@ -12,6 +12,7 @@ enum class Screen {
     Exercises,
     Templates,
     Progress,
+    Data,
     Quit,
 };
 
@@ -35,6 +36,7 @@ private:
     void screen_exercises();
     void screen_templates();
     void screen_progress();
+    void screen_data();
 
     sf::Repository repo_;
     Screen current_screen_ = Screen::MainMenu;

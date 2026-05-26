@@ -7,6 +7,7 @@
 #include "views/exercise_view.h"
 #include "views/progress_view.h"
 #include "views/template_view.h"
+#include "views/data_view.h"
 #include <swt/defaults.h>
 #include <format>
 
@@ -126,6 +127,7 @@ void App::run() {
             case Screen::Exercises: screen_exercises(); break;
             case Screen::Templates: screen_templates(); break;
             case Screen::Progress: screen_progress(); break;
+            case Screen::Data: screen_data(); break;
             case Screen::Quit: break;
         }
     }
@@ -150,6 +152,7 @@ void App::screen_main_menu() {
         {"  History",     [&]{ next = Screen::History; }},
         {"  Exercises",   [&]{ next = Screen::Exercises; }},
         {"  Progress",    [&]{ next = Screen::Progress; }},
+        {"  Import/Export", [&]{ next = Screen::Data; }},
         {"  Quit",        [&]{ next = Screen::Quit; }},
     });
 
@@ -233,6 +236,20 @@ void App::screen_progress() {
     keypad(main_win_, TRUE);
 
     ProgressView view(main_win_, repo_);
+    view.run();
+    current_screen_ = Screen::MainMenu;
+}
+
+void App::screen_data() {
+    draw_header("Import/Export");
+
+    int max_y = getmaxy(stdscr);
+    int max_x = getmaxx(stdscr);
+    if (main_win_) delwin(main_win_);
+    main_win_ = newwin(max_y - 3, max_x, 2, 0);
+    keypad(main_win_, TRUE);
+
+    DataView view(main_win_, repo_);
     view.run();
     current_screen_ = Screen::MainMenu;
 }
