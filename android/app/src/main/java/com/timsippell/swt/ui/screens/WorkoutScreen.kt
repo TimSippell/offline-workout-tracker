@@ -302,7 +302,7 @@ private fun SetCard(
                         if (set.weight > 0) {
                             if (isTimeExercise) append(" × ${set.weight.toInt()}s")
                             else append(" × ${"%.1f".format(displayWeight)} $weightUnit")
-                        } else if (set.reps > 0) append(" — tap to enter weight")
+                        } else if (set.reps > 0) append(" — long press to enter weight")
                         if (set.rpe > 0) append(" @RPE ${set.rpe}")
                     },
                     style = MaterialTheme.typography.bodyMedium
