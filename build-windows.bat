@@ -10,11 +10,25 @@ where cmake >nul 2>&1 || (
     exit /b 1
 )
 
-:: --- Configure ---
-set "BUILD_TYPE=%~1"
-if "%BUILD_TYPE%"=="" set "BUILD_TYPE=Release"
+:: --- Parse flags ---
+set "BUILD_TUI=OFF"
+set "BUILD_GUI=ON"
+set "BUILD_TYPE=Release"
 
-set CMAKE_ARGS=-DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DBUILD_TUI=ON -DBUILD_TESTS=ON -DBUILD_JNI=OFF
+:parse_args
+if "%~1"=="" goto done_args
+if /i "%~1"=="--tui" (
+    set "BUILD_TUI=ON"
+    set "BUILD_GUI=OFF"
+)
+if /i "%~1"=="debug" set "BUILD_TYPE=Debug"
+if /i "%~1"=="release" set "BUILD_TYPE=Release"
+shift
+goto parse_args
+:done_args
+
+:: --- Configure ---
+set CMAKE_ARGS=-DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DBUILD_GUI=%BUILD_GUI% -DBUILD_TUI=%BUILD_TUI% -DBUILD_TESTS=ON -DBUILD_JNI=OFF
 
 :: Use vcpkg toolchain if VCPKG_ROOT is set
 if defined VCPKG_ROOT (
@@ -22,7 +36,7 @@ if defined VCPKG_ROOT (
     echo Using vcpkg toolchain from %VCPKG_ROOT%
 )
 
-echo Configuring (%BUILD_TYPE%)...
+echo Configuring (%BUILD_TYPE%, GUI=%BUILD_GUI%, TUI=%BUILD_TUI%)...
 cmake -S "%SCRIPT_DIR%" -B "%BUILD_DIR%" %CMAKE_ARGS%
 if errorlevel 1 (
     echo CMake configuration failed.
@@ -38,8 +52,13 @@ if errorlevel 1 (
 )
 
 :: --- Result ---
-set "BINARY=%BUILD_DIR%\tui\%BUILD_TYPE%\simple-workout-tracker.exe"
-if not exist "%BINARY%" set "BINARY=%BUILD_DIR%\tui\simple-workout-tracker.exe"
+if "%BUILD_GUI%"=="ON" (
+    set "BINARY=%BUILD_DIR%\gui\%BUILD_TYPE%\swt-gui.exe"
+    if not exist "!BINARY!" set "BINARY=%BUILD_DIR%\gui\swt-gui.exe"
+) else (
+    set "BINARY=%BUILD_DIR%\tui\%BUILD_TYPE%\simple-workout-tracker.exe"
+    if not exist "!BINARY!" set "BINARY=%BUILD_DIR%\tui\simple-workout-tracker.exe"
+)
 
 if exist "%BINARY%" (
     echo.

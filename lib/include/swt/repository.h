@@ -11,6 +11,7 @@ namespace sf {
 class Repository {
 public:
     explicit Repository(Database& db);
+    sqlite3* db_handle() { return db_.handle(); }
 
     // Exercises
     int64_t add_exercise(const Exercise& ex);
