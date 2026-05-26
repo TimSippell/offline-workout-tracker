@@ -42,6 +42,7 @@ public:
     std::optional<WorkoutTemplate> get_template(int64_t id);
     std::vector<WorkoutTemplate> list_templates();
     void update_template(const WorkoutTemplate& t);
+    void clear_template_ref(int64_t template_id);
     void delete_template(int64_t id);
 
     // Template sets

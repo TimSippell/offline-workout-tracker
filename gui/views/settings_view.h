@@ -2,6 +2,7 @@
 
 #include <swt/swt.h>
 #include <string>
+#include <functional>
 
 namespace gui {
 
@@ -9,6 +10,7 @@ class SettingsView {
 public:
     explicit SettingsView(sf::Repository& repo);
     void render();
+    void set_on_reset(std::function<void()> cb) { on_reset_ = std::move(cb); }
 
 private:
     void render_import_export();
@@ -31,6 +33,8 @@ private:
 
     bool show_reset_confirm_ = false;
     bool reset_done_ = false;
+
+    std::function<void()> on_reset_;
 };
 
 } // namespace gui

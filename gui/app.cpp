@@ -10,7 +10,18 @@ App::App(sf::Database& db)
       history_view_(repo_),
       exercise_view_(repo_),
       progress_view_(repo_),
-      settings_view_(repo_) {}
+      settings_view_(repo_) {
+    workout_view_.set_on_finish([this]() {
+        history_view_.refresh();
+        progress_view_.refresh();
+    });
+    settings_view_.set_on_reset([this]() {
+        workout_view_.refresh_templates();
+        history_view_.refresh();
+        exercise_view_.refresh();
+        progress_view_.refresh();
+    });
+}
 
 void App::render() {
     if (!first_run_checked_) {

@@ -4,6 +4,7 @@
 #include "template_view.h"
 #include <vector>
 #include <string>
+#include <functional>
 
 namespace gui {
 
@@ -12,6 +13,7 @@ public:
     explicit WorkoutView(sf::Repository& repo);
     void render();
     void refresh_templates() { template_view_.refresh(); }
+    void set_on_finish(std::function<void()> cb) { on_finish_ = std::move(cb); }
 
 private:
     void render_no_workout();
@@ -50,6 +52,8 @@ private:
     std::vector<sf::WorkoutTemplate> picker_templates_;
 
     char workout_name_buf_[128] = {};
+
+    std::function<void()> on_finish_;
 };
 
 } // namespace gui

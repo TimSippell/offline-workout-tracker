@@ -9,6 +9,7 @@ class ProgressView {
 public:
     explicit ProgressView(sf::Repository& repo);
     void render();
+    void refresh() { needs_refresh_ = true; selected_ = -1; progression_.clear(); }
 
 private:
     sf::Repository& repo_;
