@@ -224,8 +224,8 @@ fun WorkoutScreen(navController: NavController) {
         AddSetDialog(
             exercises = exercises,
             onDismiss = { showAddSet = false },
-            onConfirm = { exerciseId, reps, weight, rpe ->
-                SwtBridge.addSet(activeWorkoutId!!, exerciseId, sets.size + 1, reps, AppSettings.toStorageWeight(weight, context), rpe)
+            onConfirm = { exerciseId, reps, weight, rpe, durationSecs, restSecs ->
+                SwtBridge.addSet(activeWorkoutId!!, exerciseId, sets.size + 1, reps, AppSettings.toStorageWeight(weight, context), rpe, durationSecs, restSecs)
                 exercises = SwtBridge.listExercises()
                 refreshSets()
                 showAddSet = false
@@ -251,8 +251,8 @@ fun WorkoutScreen(navController: NavController) {
             set = set,
             exercises = exercises,
             onDismiss = { editingSet = null },
-            onConfirm = { reps, weight, rpe ->
-                SwtBridge.updateSet(set.id, reps, AppSettings.toStorageWeight(weight, context), rpe)
+            onConfirm = { reps, weight, rpe, durationSecs, restSecs ->
+                SwtBridge.updateSet(set.id, reps, AppSettings.toStorageWeight(weight, context), rpe, durationSecs, restSecs)
                 refreshSets()
                 editingSet = null
             }
@@ -273,14 +273,13 @@ private fun SetCard(
     val context = LocalContext.current
     val exercise = exercises.find { it.id == set.exerciseId }
     val exerciseName = exercise?.name ?: "Unknown"
-    val isTimeExercise = exercise?.notes == "time"
     val displayWeight = AppSettings.toDisplayWeight(set.weight, context)
 
     val cardColors = when {
         completed -> CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         )
-        set.weight == 0.0 -> CardDefaults.cardColors(
+        set.weight == 0.0 && set.durationSecs == 0 -> CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
         )
         else -> CardDefaults.cardColors()
@@ -299,10 +298,9 @@ private fun SetCard(
                 Text(
                     buildString {
                         if (set.reps > 0) append("${set.reps} reps")
-                        if (set.weight > 0) {
-                            if (isTimeExercise) append(" × ${set.weight.toInt()}s")
-                            else append(" × ${"%.1f".format(displayWeight)} $weightUnit")
-                        } else if (set.reps > 0) append(" — long press to enter weight")
+                        if (set.weight > 0) append(" × ${"%.1f".format(displayWeight)} $weightUnit")
+                        if (set.durationSecs > 0) { if (isNotEmpty()) append(" • "); append("${set.durationSecs}s") }
+                        if (set.restSecs > 0) { if (isNotEmpty()) append(" • "); append("rest ${set.restSecs}s") }
                         if (set.rpe > 0) append(" @RPE ${set.rpe}")
                     },
                     style = MaterialTheme.typography.bodyMedium
@@ -317,13 +315,15 @@ private fun SetCard(
 private fun AddSetDialog(
     exercises: List<SwtBridge.Exercise>,
     onDismiss: () -> Unit,
-    onConfirm: (Long, Int, Double, Double) -> Unit
+    onConfirm: (Long, Int, Double, Double, Int, Int) -> Unit
 ) {
     val context = LocalContext.current
     val weightUnit = remember { AppSettings.getWeightUnit(context) }
     var exerciseName by remember { mutableStateOf("") }
     var reps by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
+    var duration by remember { mutableStateOf("") }
+    var rest by remember { mutableStateOf("") }
     var rpe by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
 
@@ -335,7 +335,6 @@ private fun AddSetDialog(
     val matchedExercise = remember(exerciseName) {
         exercises.find { it.name.equals(exerciseName, ignoreCase = true) }
     }
-    val isTimeExercise = matchedExercise?.notes == "time"
 
     fun resolveExerciseId(): Long {
         if (matchedExercise != null) return matchedExercise.id
@@ -374,11 +373,9 @@ private fun AddSetDialog(
                     }
                 }
                 OutlinedTextField(value = reps, onValueChange = { reps = it }, label = { Text("Reps") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                if (isTimeExercise) {
-                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Time (seconds)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                } else {
-                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Weight ($weightUnit)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-                }
+                OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Weight ($weightUnit)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                OutlinedTextField(value = duration, onValueChange = { duration = it }, label = { Text("Duration (secs)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                OutlinedTextField(value = rest, onValueChange = { rest = it }, label = { Text("Rest (secs)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 OutlinedTextField(value = rpe, onValueChange = { rpe = it }, label = { Text("RPE (optional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
             }
         },
@@ -386,9 +383,9 @@ private fun AddSetDialog(
             TextButton(
                 onClick = {
                     val id = resolveExerciseId()
-                    onConfirm(id, reps.toIntOrNull() ?: 0, weight.toDoubleOrNull() ?: 0.0, rpe.toDoubleOrNull() ?: 0.0)
+                    onConfirm(id, reps.toIntOrNull() ?: 0, weight.toDoubleOrNull() ?: 0.0, rpe.toDoubleOrNull() ?: 0.0, duration.toIntOrNull() ?: 0, rest.toIntOrNull() ?: 0)
                 },
-                enabled = exerciseName.isNotBlank() && reps.isNotBlank()
+                enabled = exerciseName.isNotBlank()
             ) { Text("Add") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
@@ -400,16 +397,17 @@ private fun EditSetDialog(
     set: SwtBridge.WorkoutSet,
     exercises: List<SwtBridge.Exercise>,
     onDismiss: () -> Unit,
-    onConfirm: (Int, Double, Double) -> Unit
+    onConfirm: (Int, Double, Double, Int, Int) -> Unit
 ) {
     val context = LocalContext.current
     val weightUnit = remember { AppSettings.getWeightUnit(context) }
     val exercise = exercises.find { it.id == set.exerciseId }
     val exerciseName = exercise?.name ?: "Unknown"
-    val isTimeExercise = exercise?.notes == "time"
     var reps by remember { mutableStateOf(if (set.reps > 0) set.reps.toString() else "") }
     val displayWeight = if (set.weight > 0) AppSettings.toDisplayWeight(set.weight, context) else 0.0
     var weight by remember { mutableStateOf(if (set.weight > 0) "%.1f".format(displayWeight) else "") }
+    var duration by remember { mutableStateOf(if (set.durationSecs > 0) set.durationSecs.toString() else "") }
+    var rest by remember { mutableStateOf(if (set.restSecs > 0) set.restSecs.toString() else "") }
     var rpe by remember { mutableStateOf(if (set.rpe > 0) set.rpe.toString() else "") }
 
     AlertDialog(
@@ -418,11 +416,9 @@ private fun EditSetDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = reps, onValueChange = { reps = it }, label = { Text("Reps") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                if (isTimeExercise) {
-                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Time (seconds)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                } else {
-                    OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Weight ($weightUnit)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-                }
+                OutlinedTextField(value = weight, onValueChange = { weight = it }, label = { Text("Weight ($weightUnit)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                OutlinedTextField(value = duration, onValueChange = { duration = it }, label = { Text("Duration (secs)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                OutlinedTextField(value = rest, onValueChange = { rest = it }, label = { Text("Rest (secs)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 OutlinedTextField(value = rpe, onValueChange = { rpe = it }, label = { Text("RPE (optional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
             }
         },
@@ -432,7 +428,9 @@ private fun EditSetDialog(
                     onConfirm(
                         reps.toIntOrNull() ?: 0,
                         weight.toDoubleOrNull() ?: 0.0,
-                        rpe.toDoubleOrNull() ?: 0.0
+                        rpe.toDoubleOrNull() ?: 0.0,
+                        duration.toIntOrNull() ?: 0,
+                        rest.toIntOrNull() ?: 0
                     )
                 }
             ) { Text("Save") }

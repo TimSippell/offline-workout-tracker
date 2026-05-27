@@ -123,6 +123,8 @@ TEST_F(RepositoryTest, AddAndGetSets) {
     s.reps = 5;
     s.weight = 100.0;
     s.rpe = 8.0;
+    s.duration_secs = 30;
+    s.rest_secs = 90;
     int64_t sid = f.repo.add_set(s);
 
     auto sets = f.repo.get_sets_for_workout(wid);
@@ -131,6 +133,8 @@ TEST_F(RepositoryTest, AddAndGetSets) {
     EXPECT_EQ(sets[0].reps, 5);
     EXPECT_DOUBLE_EQ(*sets[0].weight, 100.0);
     EXPECT_DOUBLE_EQ(*sets[0].rpe, 8.0);
+    EXPECT_EQ(sets[0].duration_secs, 30);
+    EXPECT_EQ(sets[0].rest_secs, 90);
 }
 
 TEST_F(RepositoryTest, UpdateSet) {
@@ -141,13 +145,29 @@ TEST_F(RepositoryTest, UpdateSet) {
     s.workout_id = wid; s.exercise_id = eid; s.set_order = 1; s.reps = 5;
     int64_t sid = f.repo.add_set(s);
 
-    s.id = sid; s.reps = 8; s.weight = 90.0;
+    s.id = sid; s.reps = 8; s.weight = 90.0; s.duration_secs = 60; s.rest_secs = 120;
     f.repo.update_set(s);
 
     auto sets = f.repo.get_sets_for_workout(wid);
     ASSERT_EQ(sets.size(), 1u);
     EXPECT_EQ(sets[0].reps, 8);
     EXPECT_DOUBLE_EQ(*sets[0].weight, 90.0);
+    EXPECT_EQ(sets[0].duration_secs, 60);
+    EXPECT_EQ(sets[0].rest_secs, 120);
+}
+
+TEST_F(RepositoryTest, SetTimingFieldsOptional) {
+    sf::Exercise ex; ex.name = "Bench"; int64_t eid = f.repo.add_exercise(ex);
+    int64_t wid = f.repo.start_workout("W");
+
+    sf::WorkoutSet s;
+    s.workout_id = wid; s.exercise_id = eid; s.set_order = 1; s.reps = 5;
+    f.repo.add_set(s);
+
+    auto sets = f.repo.get_sets_for_workout(wid);
+    ASSERT_EQ(sets.size(), 1u);
+    EXPECT_FALSE(sets[0].duration_secs.has_value());
+    EXPECT_FALSE(sets[0].rest_secs.has_value());
 }
 
 TEST_F(RepositoryTest, DeleteSet) {
@@ -208,16 +228,21 @@ TEST_F(RepositoryTest, TemplateSets) {
 
     sf::TemplateSet ts;
     ts.template_id = tid; ts.exercise_id = eid; ts.set_order = 1; ts.reps = 8;
+    ts.duration_secs = 45; ts.rest_secs = 60;
     int64_t tsid = f.repo.add_template_set(ts);
 
     auto sets = f.repo.get_template_sets(tid);
     ASSERT_EQ(sets.size(), 1u);
     EXPECT_EQ(sets[0].reps, 8);
+    EXPECT_EQ(sets[0].duration_secs, 45);
+    EXPECT_EQ(sets[0].rest_secs, 60);
 
-    ts.id = tsid; ts.reps = 10;
+    ts.id = tsid; ts.reps = 10; ts.duration_secs = 50; ts.rest_secs = 90;
     f.repo.update_template_set(ts);
     sets = f.repo.get_template_sets(tid);
     EXPECT_EQ(sets[0].reps, 10);
+    EXPECT_EQ(sets[0].duration_secs, 50);
+    EXPECT_EQ(sets[0].rest_secs, 90);
 
     f.repo.delete_template_set(tsid);
     sets = f.repo.get_template_sets(tid);
@@ -228,7 +253,7 @@ TEST_F(RepositoryTest, StartWorkoutFromTemplate) {
     sf::Exercise ex; ex.name = "Bench"; int64_t eid = f.repo.add_exercise(ex);
     sf::WorkoutTemplate t; t.name = "Push"; int64_t tid = f.repo.create_template(t);
 
-    sf::TemplateSet ts1; ts1.template_id = tid; ts1.exercise_id = eid; ts1.set_order = 1; ts1.reps = 8; ts1.weight = 80.0;
+    sf::TemplateSet ts1; ts1.template_id = tid; ts1.exercise_id = eid; ts1.set_order = 1; ts1.reps = 8; ts1.weight = 80.0; ts1.duration_secs = 30; ts1.rest_secs = 90;
     sf::TemplateSet ts2; ts2.template_id = tid; ts2.exercise_id = eid; ts2.set_order = 2; ts2.reps = 8; ts2.weight = 80.0;
     f.repo.add_template_set(ts1);
     f.repo.add_template_set(ts2);
@@ -240,6 +265,10 @@ TEST_F(RepositoryTest, StartWorkoutFromTemplate) {
     EXPECT_EQ(w->sets.size(), 2u);
     EXPECT_EQ(w->sets[0].reps, 8);
     EXPECT_DOUBLE_EQ(*w->sets[0].weight, 80.0);
+    EXPECT_EQ(w->sets[0].duration_secs, 30);
+    EXPECT_EQ(w->sets[0].rest_secs, 90);
+    EXPECT_FALSE(w->sets[1].duration_secs.has_value());
+    EXPECT_FALSE(w->sets[1].rest_secs.has_value());
 }
 
 TEST_F(RepositoryTest, StartWorkoutFromTemplateCustomName) {

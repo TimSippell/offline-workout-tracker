@@ -92,11 +92,11 @@ fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
         AddTemplateSetDialog(
             exercises = exercises,
             onDismiss = { showAddDialog = false },
-            onConfirm = { exerciseId, numSets, reps, weight, rpe ->
+            onConfirm = { exerciseId, numSets, reps, weight, rpe, durationSecs, restSecs ->
                 for (i in 1..numSets) {
                     SwtBridge.addTemplateSet(
                         templateId, exerciseId,
-                        sets.size + i, reps, AppSettings.toStorageWeight(weight, context), rpe
+                        sets.size + i, reps, AppSettings.toStorageWeight(weight, context), rpe, durationSecs, restSecs
                     )
                 }
                 sets = SwtBridge.getTemplateSets(templateId)
@@ -129,6 +129,8 @@ private fun TemplateSetCard(
                     buildString {
                         if (set.reps > 0) append("${set.reps} reps")
                         if (set.weight > 0) { if (isNotEmpty()) append(" • "); append("${"%.1f".format(AppSettings.toDisplayWeight(set.weight, context))} $weightUnit") }
+                        if (set.durationSecs > 0) { if (isNotEmpty()) append(" • "); append("${set.durationSecs}s") }
+                        if (set.restSecs > 0) { if (isNotEmpty()) append(" • "); append("rest ${set.restSecs}s") }
                         if (set.rpe > 0) { if (isNotEmpty()) append(" • "); append("@RPE ${set.rpe}") }
                     },
                     style = MaterialTheme.typography.bodyMedium
@@ -154,7 +156,7 @@ private fun TemplateSetCard(
 private fun AddTemplateSetDialog(
     exercises: List<SwtBridge.Exercise>,
     onDismiss: () -> Unit,
-    onConfirm: (Long, Int, Int, Double, Double) -> Unit
+    onConfirm: (Long, Int, Int, Double, Double, Int, Int) -> Unit
 ) {
     val context = LocalContext.current
     val weightUnit = remember { AppSettings.getWeightUnit(context) }
@@ -162,10 +164,10 @@ private fun AddTemplateSetDialog(
     var numSets by remember { mutableStateOf("3") }
     var reps by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
+    var duration by remember { mutableStateOf("") }
+    var rest by remember { mutableStateOf("") }
     var rpe by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-
-    val isWeightExercise = selectedExercise?.notes != "time"
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -204,14 +206,24 @@ private fun AddTemplateSetDialog(
                     label = { Text("Reps per set") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
-                if (isWeightExercise) {
-                    OutlinedTextField(
-                        value = weight,
-                        onValueChange = { weight = it },
-                        label = { Text("Weight ($weightUnit) (optional)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                    )
-                }
+                OutlinedTextField(
+                    value = weight,
+                    onValueChange = { weight = it },
+                    label = { Text("Weight ($weightUnit) (optional)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+                OutlinedTextField(
+                    value = duration,
+                    onValueChange = { duration = it },
+                    label = { Text("Duration (secs)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                OutlinedTextField(
+                    value = rest,
+                    onValueChange = { rest = it },
+                    label = { Text("Rest (secs)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
                 OutlinedTextField(
                     value = rpe,
                     onValueChange = { rpe = it },
@@ -229,11 +241,13 @@ private fun AddTemplateSetDialog(
                             numSets.toIntOrNull() ?: 1,
                             reps.toIntOrNull() ?: 0,
                             weight.toDoubleOrNull() ?: 0.0,
-                            rpe.toDoubleOrNull() ?: 0.0
+                            rpe.toDoubleOrNull() ?: 0.0,
+                            duration.toIntOrNull() ?: 0,
+                            rest.toIntOrNull() ?: 0
                         )
                     }
                 },
-                enabled = selectedExercise != null && reps.isNotBlank()
+                enabled = selectedExercise != null
             ) { Text("Add") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }

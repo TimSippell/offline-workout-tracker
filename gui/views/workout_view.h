@@ -41,11 +41,15 @@ private:
     bool show_add_set_ = false;
     char set_reps_buf_[16] = {};
     char set_weight_buf_[16] = {};
+    char set_duration_buf_[16] = {};
+    char set_rest_buf_[16] = {};
     char set_rpe_buf_[16] = {};
 
     bool show_edit_weight_ = false;
     int64_t edit_set_id_ = 0;
     char edit_weight_buf_[16] = {};
+    char edit_duration_buf_[16] = {};
+    char edit_rest_buf_[16] = {};
     char edit_rpe_buf_[16] = {};
 
     bool show_template_picker_ = false;

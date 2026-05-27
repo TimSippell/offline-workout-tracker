@@ -136,7 +136,7 @@ void WorkoutView::render_active_workout() {
         return;
     }
 
-    if (ImGui::BeginTable("sets", 7,
+    if (ImGui::BeginTable("sets", 9,
             ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY,
             ImVec2(0, ImGui::GetContentRegionAvail().y))) {
 
@@ -144,6 +144,8 @@ void WorkoutView::render_active_workout() {
         ImGui::TableSetupColumn("Exercise", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableSetupColumn("Reps", ImGuiTableColumnFlags_WidthFixed, 60);
         ImGui::TableSetupColumn("Weight", ImGuiTableColumnFlags_WidthFixed, 80);
+        ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_WidthFixed, 70);
+        ImGui::TableSetupColumn("Rest", ImGuiTableColumnFlags_WidthFixed, 60);
         ImGui::TableSetupColumn("RPE", ImGuiTableColumnFlags_WidthFixed, 50);
         ImGui::TableSetupColumn("e1RM", ImGuiTableColumnFlags_WidthFixed, 80);
         ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 50);
@@ -168,6 +170,12 @@ void WorkoutView::render_active_workout() {
             ImGui::Text("%s", s.weight ? std::format("{:.1f}", *s.weight).c_str() : "-");
 
             ImGui::TableNextColumn();
+            ImGui::Text("%s", s.duration_secs ? (std::to_string(*s.duration_secs) + "s").c_str() : "-");
+
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", s.rest_secs ? (std::to_string(*s.rest_secs) + "s").c_str() : "-");
+
+            ImGui::TableNextColumn();
             ImGui::Text("%s", s.rpe ? std::format("{:.0f}", *s.rpe).c_str() : "-");
 
             ImGui::TableNextColumn();
@@ -186,6 +194,10 @@ void WorkoutView::render_active_workout() {
                 show_edit_weight_ = true;
                 if (s.weight) snprintf(edit_weight_buf_, sizeof(edit_weight_buf_), "%.1f", *s.weight);
                 else std::memset(edit_weight_buf_, 0, sizeof(edit_weight_buf_));
+                if (s.duration_secs) snprintf(edit_duration_buf_, sizeof(edit_duration_buf_), "%d", *s.duration_secs);
+                else std::memset(edit_duration_buf_, 0, sizeof(edit_duration_buf_));
+                if (s.rest_secs) snprintf(edit_rest_buf_, sizeof(edit_rest_buf_), "%d", *s.rest_secs);
+                else std::memset(edit_rest_buf_, 0, sizeof(edit_rest_buf_));
                 if (s.rpe) snprintf(edit_rpe_buf_, sizeof(edit_rpe_buf_), "%.0f", *s.rpe);
                 else std::memset(edit_rpe_buf_, 0, sizeof(edit_rpe_buf_));
             }
@@ -254,7 +266,7 @@ void WorkoutView::render_add_set_popup() {
     ImGui::OpenPopup("Add Set");
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(350, 220));
+    ImGui::SetNextWindowSize(ImVec2(350, 280));
 
     if (ImGui::BeginPopupModal("Add Set", &show_add_set_, ImGuiWindowFlags_NoResize)) {
         ImGui::Text("Set %d for %s", set_count_ + 1, current_exercise_name_.c_str());
@@ -262,6 +274,8 @@ void WorkoutView::render_add_set_popup() {
 
         ImGui::InputText("Reps", set_reps_buf_, sizeof(set_reps_buf_));
         ImGui::InputText("Weight", set_weight_buf_, sizeof(set_weight_buf_));
+        ImGui::InputText("Duration (secs)", set_duration_buf_, sizeof(set_duration_buf_));
+        ImGui::InputText("Rest (secs)", set_rest_buf_, sizeof(set_rest_buf_));
         ImGui::InputText("RPE (optional)", set_rpe_buf_, sizeof(set_rpe_buf_));
 
         ImGui::Spacing();
@@ -273,6 +287,8 @@ void WorkoutView::render_add_set_popup() {
 
             if (set_reps_buf_[0]) s.reps = std::atoi(set_reps_buf_);
             if (set_weight_buf_[0]) s.weight = std::atof(set_weight_buf_);
+            if (set_duration_buf_[0]) s.duration_secs = std::atoi(set_duration_buf_);
+            if (set_rest_buf_[0]) s.rest_secs = std::atoi(set_rest_buf_);
             if (set_rpe_buf_[0]) s.rpe = std::atof(set_rpe_buf_);
 
             repo_.add_set(s);
@@ -295,10 +311,12 @@ void WorkoutView::render_edit_weight_popup() {
     ImGui::OpenPopup("Edit Set");
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(350, 180));
+    ImGui::SetNextWindowSize(ImVec2(350, 240));
 
     if (ImGui::BeginPopupModal("Edit Set", &show_edit_weight_, ImGuiWindowFlags_NoResize)) {
         ImGui::InputText("Weight", edit_weight_buf_, sizeof(edit_weight_buf_));
+        ImGui::InputText("Duration (secs)", edit_duration_buf_, sizeof(edit_duration_buf_));
+        ImGui::InputText("Rest (secs)", edit_rest_buf_, sizeof(edit_rest_buf_));
         ImGui::InputText("RPE", edit_rpe_buf_, sizeof(edit_rpe_buf_));
 
         ImGui::Spacing();
@@ -306,6 +324,10 @@ void WorkoutView::render_edit_weight_popup() {
             for (auto& s : sets_) {
                 if (s.id == edit_set_id_) {
                     if (edit_weight_buf_[0]) s.weight = std::atof(edit_weight_buf_);
+                    if (edit_duration_buf_[0]) s.duration_secs = std::atoi(edit_duration_buf_);
+                    else s.duration_secs = std::nullopt;
+                    if (edit_rest_buf_[0]) s.rest_secs = std::atoi(edit_rest_buf_);
+                    else s.rest_secs = std::nullopt;
                     if (edit_rpe_buf_[0]) s.rpe = std::atof(edit_rpe_buf_);
                     repo_.update_set(s);
                     break;

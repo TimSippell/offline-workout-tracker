@@ -74,29 +74,25 @@ void TemplateView::render() {
                 if (sets.empty()) {
                     ImGui::TextDisabled("No exercises");
                 } else {
-                    if (ImGui::BeginTable("##sets", 4, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerH)) {
+                    if (ImGui::BeginTable("##sets", 5, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerH)) {
                         ImGui::TableSetupColumn("Exercise", ImGuiTableColumnFlags_WidthStretch);
                         ImGui::TableSetupColumn("Reps", ImGuiTableColumnFlags_WidthFixed, 50);
-                        ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, 50);
+                        ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_WidthFixed, 60);
+                        ImGui::TableSetupColumn("Rest", ImGuiTableColumnFlags_WidthFixed, 50);
                         ImGui::TableSetupColumn("RPE", ImGuiTableColumnFlags_WidthFixed, 50);
                         ImGui::TableHeadersRow();
 
                         for (const auto& s : sets) {
                             auto ex = repo_.get_exercise(s.exercise_id);
-                            bool is_time = ex && ex->notes == "time";
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             ImGui::TextUnformatted(ex ? ex->name.c_str() : "?");
                             ImGui::TableNextColumn();
-                            if (is_time)
-                                ImGui::TextUnformatted("-");
-                            else
-                                ImGui::Text("%s", s.reps ? std::to_string(*s.reps).c_str() : "-");
+                            ImGui::Text("%s", s.reps ? std::to_string(*s.reps).c_str() : "-");
                             ImGui::TableNextColumn();
-                            if (is_time)
-                                ImGui::Text("%s", s.rest_secs ? (std::to_string(*s.rest_secs) + "s").c_str() : "-");
-                            else
-                                ImGui::TextUnformatted("-");
+                            ImGui::Text("%s", s.duration_secs ? (std::to_string(*s.duration_secs) + "s").c_str() : "-");
+                            ImGui::TableNextColumn();
+                            ImGui::Text("%s", s.rest_secs ? (std::to_string(*s.rest_secs) + "s").c_str() : "-");
                             ImGui::TableNextColumn();
                             ImGui::Text("%s", s.rpe ? std::format("{:.0f}", *s.rpe).c_str() : "-");
                         }
@@ -140,6 +136,7 @@ void TemplateView::render_edit_popup() {
                 std::memset(add_reps_buf_, 0, sizeof(add_reps_buf_));
                 std::memset(add_rpe_buf_, 0, sizeof(add_rpe_buf_));
                 std::memset(add_time_buf_, 0, sizeof(add_time_buf_));
+                std::memset(add_rest_buf_, 0, sizeof(add_rest_buf_));
                 show_add_exercise_ = true;
                 open_add_exercise_popup_ = true;
             }
@@ -150,22 +147,23 @@ void TemplateView::render_edit_popup() {
         if (edit_sets_.empty()) {
             ImGui::Text("No exercises yet.");
         } else {
-            if (ImGui::BeginTable("tmpl_sets", 5,
+            if (ImGui::BeginTable("tmpl_sets", 6,
                     ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY,
                     ImVec2(0, ImGui::GetContentRegionAvail().y - 80))) {
 
                 ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 40);
                 ImGui::TableSetupColumn("Exercise", ImGuiTableColumnFlags_WidthStretch);
                 ImGui::TableSetupColumn("Reps", ImGuiTableColumnFlags_WidthFixed, 50);
-                ImGui::TableSetupColumn("Time", ImGuiTableColumnFlags_WidthFixed, 50);
+                ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_WidthFixed, 60);
+                ImGui::TableSetupColumn("Rest", ImGuiTableColumnFlags_WidthFixed, 50);
                 ImGui::TableSetupColumn("RPE", ImGuiTableColumnFlags_WidthFixed, 50);
                 ImGui::TableHeadersRow();
 
                 for (int i = 0; i < static_cast<int>(edit_sets_.size()); i++) {
                     const auto& s = edit_sets_[i];
                     auto ex = repo_.get_exercise(s.exercise_id);
-                    bool is_time = ex && ex->notes == "time";
 
+                    ImGui::PushID(i);
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::Text("%d", s.set_order);
@@ -177,19 +175,17 @@ void TemplateView::render_edit_popup() {
                     }
 
                     ImGui::TableNextColumn();
-                    if (is_time)
-                        ImGui::TextUnformatted("-");
-                    else
-                        ImGui::Text("%s", s.reps ? std::to_string(*s.reps).c_str() : "-");
+                    ImGui::Text("%s", s.reps ? std::to_string(*s.reps).c_str() : "-");
 
                     ImGui::TableNextColumn();
-                    if (is_time)
-                        ImGui::Text("%s", s.rest_secs ? (std::to_string(*s.rest_secs) + "s").c_str() : "-");
-                    else
-                        ImGui::TextUnformatted("-");
+                    ImGui::Text("%s", s.duration_secs ? (std::to_string(*s.duration_secs) + "s").c_str() : "-");
+
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%s", s.rest_secs ? (std::to_string(*s.rest_secs) + "s").c_str() : "-");
 
                     ImGui::TableNextColumn();
                     ImGui::Text("%s", s.rpe ? std::format("{:.0f}", *s.rpe).c_str() : "-");
+                    ImGui::PopID();
                 }
                 ImGui::EndTable();
             }
@@ -248,41 +244,28 @@ void TemplateView::render_add_exercise_popup() {
         for (auto& e : add_exercises_) names.push_back(e.name.c_str());
         ImGui::Combo("Exercise", &add_exercise_pick_, names.data(), static_cast<int>(names.size()));
 
-        bool is_time = add_exercise_pick_ < static_cast<int>(add_exercises_.size())
-            && add_exercises_[add_exercise_pick_].notes == "time";
-
-        if (is_time) {
-            ImGui::InputText("Time (seconds)", add_time_buf_, sizeof(add_time_buf_));
-        } else {
-            ImGui::InputText("Number of sets", add_num_sets_buf_, sizeof(add_num_sets_buf_));
-            ImGui::InputText("Reps per set", add_reps_buf_, sizeof(add_reps_buf_));
-        }
+        ImGui::InputText("Number of sets", add_num_sets_buf_, sizeof(add_num_sets_buf_));
+        ImGui::InputText("Reps per set", add_reps_buf_, sizeof(add_reps_buf_));
+        ImGui::InputText("Duration (secs)", add_time_buf_, sizeof(add_time_buf_));
+        ImGui::InputText("Rest (secs)", add_rest_buf_, sizeof(add_rest_buf_));
         ImGui::InputText("Target RPE (optional)", add_rpe_buf_, sizeof(add_rpe_buf_));
 
         ImGui::Spacing();
         if (ImGui::Button("Add", ImVec2(120, 0))) {
             if (add_exercise_pick_ < static_cast<int>(add_exercises_.size())) {
                 int order = static_cast<int>(edit_sets_.size());
-                if (is_time) {
-                    sf::TemplateSet ts;
-                    ts.template_id = edit_template_id_;
-                    ts.exercise_id = add_exercises_[add_exercise_pick_].id;
-                    ts.set_order = ++order;
-                    if (add_time_buf_[0]) ts.rest_secs = std::atoi(add_time_buf_);
-                    if (add_rpe_buf_[0]) ts.rpe = std::atof(add_rpe_buf_);
-                    repo_.add_template_set(ts);
-                } else {
-                    int num_sets = add_num_sets_buf_[0] ? std::atoi(add_num_sets_buf_) : 1;
-                    if (num_sets > 0) {
-                        for (int i = 0; i < num_sets; i++) {
-                            sf::TemplateSet ts;
-                            ts.template_id = edit_template_id_;
-                            ts.exercise_id = add_exercises_[add_exercise_pick_].id;
-                            ts.set_order = ++order;
-                            if (add_reps_buf_[0]) ts.reps = std::atoi(add_reps_buf_);
-                            if (add_rpe_buf_[0]) ts.rpe = std::atof(add_rpe_buf_);
-                            repo_.add_template_set(ts);
-                        }
+                int num_sets = add_num_sets_buf_[0] ? std::atoi(add_num_sets_buf_) : 1;
+                if (num_sets > 0) {
+                    for (int i = 0; i < num_sets; i++) {
+                        sf::TemplateSet ts;
+                        ts.template_id = edit_template_id_;
+                        ts.exercise_id = add_exercises_[add_exercise_pick_].id;
+                        ts.set_order = ++order;
+                        if (add_reps_buf_[0]) ts.reps = std::atoi(add_reps_buf_);
+                        if (add_time_buf_[0]) ts.duration_secs = std::atoi(add_time_buf_);
+                        if (add_rest_buf_[0]) ts.rest_secs = std::atoi(add_rest_buf_);
+                        if (add_rpe_buf_[0]) ts.rpe = std::atof(add_rpe_buf_);
+                        repo_.add_template_set(ts);
                     }
                 }
                 edit_sets_ = repo_.get_template_sets(edit_template_id_);

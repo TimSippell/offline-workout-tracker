@@ -138,7 +138,7 @@ Java_com_timsippell_swt_bridge_SwtBridge_nativeDeleteWorkout(JNIEnv*, jobject, j
 
 JNIEXPORT jlong JNICALL
 Java_com_timsippell_swt_bridge_SwtBridge_nativeAddSet(JNIEnv*, jobject,
-        jlong workoutId, jlong exerciseId, jint order, jint reps, jdouble weight, jdouble rpe) {
+        jlong workoutId, jlong exerciseId, jint order, jint reps, jdouble weight, jdouble rpe, jint durationSecs, jint restSecs) {
     if (!g_repo) return -1;
     sf::WorkoutSet s;
     s.workout_id = workoutId;
@@ -147,16 +147,19 @@ Java_com_timsippell_swt_bridge_SwtBridge_nativeAddSet(JNIEnv*, jobject,
     if (reps > 0) s.reps = reps;
     if (weight > 0) s.weight = weight;
     if (rpe > 0) s.rpe = rpe;
+    if (durationSecs > 0) s.duration_secs = durationSecs;
+    if (restSecs > 0) s.rest_secs = restSecs;
     return g_repo->add_set(s);
 }
 
 static jobject makeWorkoutSet(JNIEnv* env, const sf::WorkoutSet& s) {
     jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$WorkoutSet");
-    jmethodID ctor = env->GetMethodID(cls, "<init>", "(JJJIIDD)V");
+    jmethodID ctor = env->GetMethodID(cls, "<init>", "(JJJIIDDII)V");
     return env->NewObject(cls, ctor,
         (jlong)s.id, (jlong)s.workout_id, (jlong)s.exercise_id,
         (jint)s.set_order, (jint)s.reps.value_or(0),
-        (jdouble)s.weight.value_or(0.0), (jdouble)s.rpe.value_or(0.0));
+        (jdouble)s.weight.value_or(0.0), (jdouble)s.rpe.value_or(0.0),
+        (jint)s.duration_secs.value_or(0), (jint)s.rest_secs.value_or(0));
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -225,11 +228,12 @@ static jobject makeWorkoutTemplate(JNIEnv* env, const sf::WorkoutTemplate& t) {
 
 static jobject makeTemplateSet(JNIEnv* env, const sf::TemplateSet& s) {
     jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$TemplateSet");
-    jmethodID ctor = env->GetMethodID(cls, "<init>", "(JJJIIDD)V");
+    jmethodID ctor = env->GetMethodID(cls, "<init>", "(JJJIIDDII)V");
     return env->NewObject(cls, ctor,
         (jlong)s.id, (jlong)s.template_id, (jlong)s.exercise_id,
         (jint)s.set_order, (jint)s.reps.value_or(0),
-        (jdouble)s.weight.value_or(0.0), (jdouble)s.rpe.value_or(0.0));
+        (jdouble)s.weight.value_or(0.0), (jdouble)s.rpe.value_or(0.0),
+        (jint)s.duration_secs.value_or(0), (jint)s.rest_secs.value_or(0));
 }
 
 JNIEXPORT jlong JNICALL
@@ -279,7 +283,7 @@ Java_com_timsippell_swt_bridge_SwtBridge_nativeDeleteTemplate(JNIEnv*, jobject, 
 
 JNIEXPORT jlong JNICALL
 Java_com_timsippell_swt_bridge_SwtBridge_nativeAddTemplateSet(JNIEnv*, jobject,
-        jlong templateId, jlong exerciseId, jint order, jint reps, jdouble weight, jdouble rpe) {
+        jlong templateId, jlong exerciseId, jint order, jint reps, jdouble weight, jdouble rpe, jint durationSecs, jint restSecs) {
     if (!g_repo) return -1;
     sf::TemplateSet s;
     s.template_id = templateId;
@@ -288,6 +292,8 @@ Java_com_timsippell_swt_bridge_SwtBridge_nativeAddTemplateSet(JNIEnv*, jobject,
     if (reps > 0) s.reps = reps;
     if (weight > 0) s.weight = weight;
     if (rpe > 0) s.rpe = rpe;
+    if (durationSecs > 0) s.duration_secs = durationSecs;
+    if (restSecs > 0) s.rest_secs = restSecs;
     return g_repo->add_template_set(s);
 }
 
@@ -314,13 +320,15 @@ Java_com_timsippell_swt_bridge_SwtBridge_nativeStartWorkoutFromTemplate(JNIEnv* 
 
 JNIEXPORT void JNICALL
 Java_com_timsippell_swt_bridge_SwtBridge_nativeUpdateSet(JNIEnv*, jobject,
-        jlong id, jint reps, jdouble weight, jdouble rpe) {
+        jlong id, jint reps, jdouble weight, jdouble rpe, jint durationSecs, jint restSecs) {
     if (!g_repo) return;
     sf::WorkoutSet s;
     s.id = id;
     if (reps > 0) s.reps = reps;
     if (weight > 0) s.weight = weight;
     if (rpe > 0) s.rpe = rpe;
+    if (durationSecs > 0) s.duration_secs = durationSecs;
+    if (restSecs > 0) s.rest_secs = restSecs;
     g_repo->update_set(s);
 }
 

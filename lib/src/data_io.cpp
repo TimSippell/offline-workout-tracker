@@ -228,6 +228,8 @@ void export_to_json(Repository& repo, std::ostream& out, ExportScope scope) {
                     << ", \"reps\": " << s.reps.value_or(0)
                     << ", \"weight\": " << s.weight.value_or(0.0)
                     << ", \"rpe\": " << s.rpe.value_or(0.0)
+                    << ", \"durationSecs\": " << s.duration_secs.value_or(0)
+                    << ", \"restSecs\": " << s.rest_secs.value_or(0)
                     << "}";
                 if (j + 1 < sets.size()) out << ", ";
             }
@@ -257,6 +259,8 @@ void export_to_json(Repository& repo, std::ostream& out, ExportScope scope) {
                     << ", \"reps\": " << s.reps.value_or(0)
                     << ", \"weight\": " << s.weight.value_or(0.0)
                     << ", \"rpe\": " << s.rpe.value_or(0.0)
+                    << ", \"durationSecs\": " << s.duration_secs.value_or(0)
+                    << ", \"restSecs\": " << s.rest_secs.value_or(0)
                     << "}";
                 if (j + 1 < sets.size()) out << ", ";
             }
@@ -361,6 +365,10 @@ ImportResult import_from_json(Repository& repo, const std::string& json) {
             if (weight > 0) ws.weight = weight;
             double rpe = s.get_number("rpe");
             if (rpe > 0) ws.rpe = rpe;
+            int dur = static_cast<int>(s.get_number("durationSecs"));
+            if (dur > 0) ws.duration_secs = dur;
+            int rest = static_cast<int>(s.get_number("restSecs"));
+            if (rest > 0) ws.rest_secs = rest;
             repo.add_set(ws);
             result.sets++;
         }
@@ -387,6 +395,10 @@ ImportResult import_from_json(Repository& repo, const std::string& json) {
             if (weight > 0) ts.weight = weight;
             double rpe = s.get_number("rpe");
             if (rpe > 0) ts.rpe = rpe;
+            int dur = static_cast<int>(s.get_number("durationSecs"));
+            if (dur > 0) ts.duration_secs = dur;
+            int rest = static_cast<int>(s.get_number("restSecs"));
+            if (rest > 0) ts.rest_secs = rest;
             repo.add_template_set(ts);
         }
         result.templates++;

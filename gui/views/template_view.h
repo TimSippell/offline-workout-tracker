@@ -35,6 +35,7 @@ private:
     char add_reps_buf_[8] = {};
     char add_rpe_buf_[8] = {};
     char add_time_buf_[8] = {};
+    char add_rest_buf_[8] = {};
 
     char create_name_buf_[128] = {};
 };

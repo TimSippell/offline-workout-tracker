@@ -46,7 +46,8 @@ void Database::migrate() {
             reps        INTEGER,
             weight      REAL,
             rpe         REAL,
-            rest_secs   INTEGER,
+            rest_secs       INTEGER,
+            duration_secs   INTEGER,
             tempo       TEXT,
             notes       TEXT,
             created_at  TEXT DEFAULT (datetime('now'))
@@ -69,7 +70,8 @@ void Database::migrate() {
             set_order   INTEGER NOT NULL,
             reps        INTEGER,
             rpe         REAL,
-            rest_secs   INTEGER,
+            rest_secs       INTEGER,
+            duration_secs   INTEGER,
             tempo       TEXT,
             notes       TEXT
         );
@@ -88,6 +90,10 @@ void Database::migrate() {
     sqlite3_exec(db_, "ALTER TABLE workout ADD COLUMN template_id INTEGER REFERENCES workout_template(id)",
                  nullptr, nullptr, nullptr);
     sqlite3_exec(db_, "ALTER TABLE template_set ADD COLUMN weight REAL",
+                 nullptr, nullptr, nullptr);
+    sqlite3_exec(db_, "ALTER TABLE workout_set ADD COLUMN duration_secs INTEGER",
+                 nullptr, nullptr, nullptr);
+    sqlite3_exec(db_, "ALTER TABLE template_set ADD COLUMN duration_secs INTEGER",
                  nullptr, nullptr, nullptr);
 
     sqlite3_exec(db_, R"(

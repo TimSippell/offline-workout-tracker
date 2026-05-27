@@ -23,10 +23,10 @@ private:
     bool show_edit_set_ = false;
     bool open_edit_set_ = false;
     sf::WorkoutSet edit_set_;
-    bool edit_is_time_ = false;
     char edit_reps_buf_[16] = {};
     char edit_weight_buf_[16] = {};
-    char edit_time_buf_[16] = {};
+    char edit_duration_buf_[16] = {};
+    char edit_rest_buf_[16] = {};
     char edit_rpe_buf_[16] = {};
 };
 

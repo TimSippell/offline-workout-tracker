@@ -253,7 +253,7 @@ void Repository::delete_workout(int64_t id) {
 // --- Sets ---
 
 int64_t Repository::add_set(const WorkoutSet& s) {
-    const char* sql = "INSERT INTO workout_set (workout_id, exercise_id, set_order, reps, weight, rpe, rest_secs, tempo, notes) VALUES (?,?,?,?,?,?,?,?,?)";
+    const char* sql = "INSERT INTO workout_set (workout_id, exercise_id, set_order, reps, weight, rpe, rest_secs, duration_secs, tempo, notes) VALUES (?,?,?,?,?,?,?,?,?,?)";
     sqlite3_stmt* raw = nullptr;
     sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
     StmtGuard stmt{raw};
@@ -265,8 +265,9 @@ int64_t Repository::add_set(const WorkoutSet& s) {
     bind_optional_double(raw, 5, s.weight);
     bind_optional_double(raw, 6, s.rpe);
     bind_optional_int(raw, 7, s.rest_secs);
-    bind_text(raw, 8, s.tempo);
-    bind_text(raw, 9, s.notes);
+    bind_optional_int(raw, 8, s.duration_secs);
+    bind_text(raw, 9, s.tempo);
+    bind_text(raw, 10, s.notes);
 
     if (sqlite3_step(raw) != SQLITE_DONE)
         throw std::runtime_error(std::string("add_set: ") + sqlite3_errmsg(db_.handle()));
@@ -275,7 +276,7 @@ int64_t Repository::add_set(const WorkoutSet& s) {
 }
 
 void Repository::update_set(const WorkoutSet& s) {
-    const char* sql = "UPDATE workout_set SET reps=?, weight=?, rpe=?, rest_secs=?, tempo=?, notes=? WHERE id=?";
+    const char* sql = "UPDATE workout_set SET reps=?, weight=?, rpe=?, rest_secs=?, duration_secs=?, tempo=?, notes=? WHERE id=?";
     sqlite3_stmt* raw = nullptr;
     sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
     StmtGuard stmt{raw};
@@ -284,9 +285,10 @@ void Repository::update_set(const WorkoutSet& s) {
     bind_optional_double(raw, 2, s.weight);
     bind_optional_double(raw, 3, s.rpe);
     bind_optional_int(raw, 4, s.rest_secs);
-    bind_text(raw, 5, s.tempo);
-    bind_text(raw, 6, s.notes);
-    sqlite3_bind_int64(raw, 7, s.id);
+    bind_optional_int(raw, 5, s.duration_secs);
+    bind_text(raw, 6, s.tempo);
+    bind_text(raw, 7, s.notes);
+    sqlite3_bind_int64(raw, 8, s.id);
     sqlite3_step(raw);
 }
 
@@ -300,7 +302,7 @@ void Repository::delete_set(int64_t id) {
 }
 
 std::vector<WorkoutSet> Repository::get_sets_for_workout(int64_t workout_id) {
-    const char* sql = "SELECT id, workout_id, exercise_id, set_order, reps, weight, rpe, rest_secs, tempo, notes FROM workout_set WHERE workout_id=? ORDER BY set_order";
+    const char* sql = "SELECT id, workout_id, exercise_id, set_order, reps, weight, rpe, rest_secs, duration_secs, tempo, notes FROM workout_set WHERE workout_id=? ORDER BY set_order";
     sqlite3_stmt* raw = nullptr;
     sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
     StmtGuard stmt{raw};
@@ -317,15 +319,16 @@ std::vector<WorkoutSet> Repository::get_sets_for_workout(int64_t workout_id) {
         s.weight = col_optional_double(raw, 5);
         s.rpe = col_optional_double(raw, 6);
         s.rest_secs = col_optional_int(raw, 7);
-        s.tempo = col_text(raw, 8);
-        s.notes = col_text(raw, 9);
+        s.duration_secs = col_optional_int(raw, 8);
+        s.tempo = col_text(raw, 9);
+        s.notes = col_text(raw, 10);
         result.push_back(std::move(s));
     }
     return result;
 }
 
 std::vector<WorkoutSet> Repository::get_sets_for_exercise(int64_t exercise_id, int limit) {
-    const char* sql = "SELECT ws.id, ws.workout_id, ws.exercise_id, ws.set_order, ws.reps, ws.weight, ws.rpe, ws.rest_secs, ws.tempo, ws.notes FROM workout_set ws JOIN workout w ON ws.workout_id = w.id WHERE ws.exercise_id=? ORDER BY w.started_at DESC, ws.set_order LIMIT ?";
+    const char* sql = "SELECT ws.id, ws.workout_id, ws.exercise_id, ws.set_order, ws.reps, ws.weight, ws.rpe, ws.rest_secs, ws.duration_secs, ws.tempo, ws.notes FROM workout_set ws JOIN workout w ON ws.workout_id = w.id WHERE ws.exercise_id=? ORDER BY w.started_at DESC, ws.set_order LIMIT ?";
     sqlite3_stmt* raw = nullptr;
     sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
     StmtGuard stmt{raw};
@@ -343,8 +346,9 @@ std::vector<WorkoutSet> Repository::get_sets_for_exercise(int64_t exercise_id, i
         s.weight = col_optional_double(raw, 5);
         s.rpe = col_optional_double(raw, 6);
         s.rest_secs = col_optional_int(raw, 7);
-        s.tempo = col_text(raw, 8);
-        s.notes = col_text(raw, 9);
+        s.duration_secs = col_optional_int(raw, 8);
+        s.tempo = col_text(raw, 9);
+        s.notes = col_text(raw, 10);
         result.push_back(std::move(s));
     }
     return result;
@@ -433,7 +437,7 @@ void Repository::delete_template(int64_t id) {
 // --- Template Sets ---
 
 int64_t Repository::add_template_set(const TemplateSet& s) {
-    const char* sql = "INSERT INTO template_set (template_id, exercise_id, set_order, reps, weight, rpe, rest_secs, tempo, notes) VALUES (?,?,?,?,?,?,?,?,?)";
+    const char* sql = "INSERT INTO template_set (template_id, exercise_id, set_order, reps, weight, rpe, rest_secs, duration_secs, tempo, notes) VALUES (?,?,?,?,?,?,?,?,?,?)";
     sqlite3_stmt* raw = nullptr;
     sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
     StmtGuard stmt{raw};
@@ -445,8 +449,9 @@ int64_t Repository::add_template_set(const TemplateSet& s) {
     bind_optional_double(raw, 5, s.weight);
     bind_optional_double(raw, 6, s.rpe);
     bind_optional_int(raw, 7, s.rest_secs);
-    bind_text(raw, 8, s.tempo);
-    bind_text(raw, 9, s.notes);
+    bind_optional_int(raw, 8, s.duration_secs);
+    bind_text(raw, 9, s.tempo);
+    bind_text(raw, 10, s.notes);
 
     if (sqlite3_step(raw) != SQLITE_DONE)
         throw std::runtime_error(std::string("add_template_set: ") + sqlite3_errmsg(db_.handle()));
@@ -455,7 +460,7 @@ int64_t Repository::add_template_set(const TemplateSet& s) {
 }
 
 void Repository::update_template_set(const TemplateSet& s) {
-    const char* sql = "UPDATE template_set SET exercise_id=?, set_order=?, reps=?, rpe=?, rest_secs=?, tempo=?, notes=? WHERE id=?";
+    const char* sql = "UPDATE template_set SET exercise_id=?, set_order=?, reps=?, rpe=?, rest_secs=?, duration_secs=?, tempo=?, notes=? WHERE id=?";
     sqlite3_stmt* raw = nullptr;
     sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
     StmtGuard stmt{raw};
@@ -465,9 +470,10 @@ void Repository::update_template_set(const TemplateSet& s) {
     bind_optional_int(raw, 3, s.reps);
     bind_optional_double(raw, 4, s.rpe);
     bind_optional_int(raw, 5, s.rest_secs);
-    bind_text(raw, 6, s.tempo);
-    bind_text(raw, 7, s.notes);
-    sqlite3_bind_int64(raw, 8, s.id);
+    bind_optional_int(raw, 6, s.duration_secs);
+    bind_text(raw, 7, s.tempo);
+    bind_text(raw, 8, s.notes);
+    sqlite3_bind_int64(raw, 9, s.id);
     sqlite3_step(raw);
 }
 
@@ -499,7 +505,7 @@ void Repository::swap_template_set_order(int64_t id_a, int order_a, int64_t id_b
 }
 
 std::vector<TemplateSet> Repository::get_template_sets(int64_t template_id) {
-    const char* sql = "SELECT id, template_id, exercise_id, set_order, reps, weight, rpe, rest_secs, tempo, notes FROM template_set WHERE template_id=? ORDER BY set_order";
+    const char* sql = "SELECT id, template_id, exercise_id, set_order, reps, weight, rpe, rest_secs, duration_secs, tempo, notes FROM template_set WHERE template_id=? ORDER BY set_order";
     sqlite3_stmt* raw = nullptr;
     sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
     StmtGuard stmt{raw};
@@ -516,8 +522,9 @@ std::vector<TemplateSet> Repository::get_template_sets(int64_t template_id) {
         s.weight = col_optional_double(raw, 5);
         s.rpe = col_optional_double(raw, 6);
         s.rest_secs = col_optional_int(raw, 7);
-        s.tempo = col_text(raw, 8);
-        s.notes = col_text(raw, 9);
+        s.duration_secs = col_optional_int(raw, 8);
+        s.tempo = col_text(raw, 9);
+        s.notes = col_text(raw, 10);
         result.push_back(std::move(s));
     }
     return result;
@@ -549,6 +556,7 @@ int64_t Repository::start_workout_from_template(int64_t template_id, const std::
         ws.weight = ts.weight;
         ws.rpe = ts.rpe;
         ws.rest_secs = ts.rest_secs;
+        ws.duration_secs = ts.duration_secs;
         ws.tempo = ts.tempo;
         ws.notes = ts.notes;
         add_set(ws);

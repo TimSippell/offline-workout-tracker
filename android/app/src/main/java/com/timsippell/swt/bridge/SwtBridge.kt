@@ -31,7 +31,9 @@ object SwtBridge {
         val order: Int,
         val reps: Int,
         val weight: Double,
-        val rpe: Double
+        val rpe: Double,
+        val durationSecs: Int,
+        val restSecs: Int
     )
 
     data class ExerciseStats(
@@ -56,7 +58,9 @@ object SwtBridge {
         val order: Int,
         val reps: Int,
         val weight: Double,
-        val rpe: Double
+        val rpe: Double,
+        val durationSecs: Int,
+        val restSecs: Int
     )
 
     data class ProgressionPoint(
@@ -101,14 +105,14 @@ object SwtBridge {
         nativeListWorkouts(limit, offset)?.toList() ?: emptyList()
     fun deleteWorkout(id: Long) = nativeDeleteWorkout(id)
 
-    fun addSet(workoutId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double): Long =
-        nativeAddSet(workoutId, exerciseId, order, reps, weight, rpe)
+    fun addSet(workoutId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double, durationSecs: Int = 0, restSecs: Int = 0): Long =
+        nativeAddSet(workoutId, exerciseId, order, reps, weight, rpe, durationSecs, restSecs)
     fun getSetsForWorkout(workoutId: Long): List<WorkoutSet> =
         nativeGetSetsForWorkout(workoutId)?.toList() ?: emptyList()
     fun deleteSet(id: Long) = nativeDeleteSet(id)
 
-    fun updateSet(id: Long, reps: Int, weight: Double, rpe: Double) =
-        nativeUpdateSet(id, reps, weight, rpe)
+    fun updateSet(id: Long, reps: Int, weight: Double, rpe: Double, durationSecs: Int = 0, restSecs: Int = 0) =
+        nativeUpdateSet(id, reps, weight, rpe, durationSecs, restSecs)
 
     fun createTemplate(name: String, notes: String = ""): Long =
         nativeCreateTemplate(name, notes)
@@ -117,8 +121,8 @@ object SwtBridge {
     fun getTemplateSets(templateId: Long): List<TemplateSet> =
         nativeGetTemplateSets(templateId)?.toList() ?: emptyList()
     fun deleteTemplate(id: Long) = nativeDeleteTemplate(id)
-    fun addTemplateSet(templateId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double): Long =
-        nativeAddTemplateSet(templateId, exerciseId, order, reps, weight, rpe)
+    fun addTemplateSet(templateId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double, durationSecs: Int = 0, restSecs: Int = 0): Long =
+        nativeAddTemplateSet(templateId, exerciseId, order, reps, weight, rpe, durationSecs, restSecs)
     fun deleteTemplateSet(id: Long) = nativeDeleteTemplateSet(id)
     fun swapTemplateSetOrder(idA: Long, orderA: Int, idB: Long, orderB: Int) =
         nativeSwapTemplateSetOrder(idA, orderA, idB, orderB)
@@ -161,15 +165,15 @@ object SwtBridge {
     private external fun nativeGetActiveWorkout(): Workout?
     private external fun nativeListWorkouts(limit: Int, offset: Int): Array<Workout>?
     private external fun nativeDeleteWorkout(id: Long)
-    private external fun nativeAddSet(workoutId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double): Long
+    private external fun nativeAddSet(workoutId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double, durationSecs: Int, restSecs: Int): Long
     private external fun nativeGetSetsForWorkout(workoutId: Long): Array<WorkoutSet>?
     private external fun nativeDeleteSet(id: Long)
-    private external fun nativeUpdateSet(id: Long, reps: Int, weight: Double, rpe: Double)
+    private external fun nativeUpdateSet(id: Long, reps: Int, weight: Double, rpe: Double, durationSecs: Int, restSecs: Int)
     private external fun nativeCreateTemplate(name: String, notes: String): Long
     private external fun nativeListTemplates(): Array<WorkoutTemplate>?
     private external fun nativeGetTemplateSets(templateId: Long): Array<TemplateSet>?
     private external fun nativeDeleteTemplate(id: Long)
-    private external fun nativeAddTemplateSet(templateId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double): Long
+    private external fun nativeAddTemplateSet(templateId: Long, exerciseId: Long, order: Int, reps: Int, weight: Double, rpe: Double, durationSecs: Int, restSecs: Int): Long
     private external fun nativeDeleteTemplateSet(id: Long)
     private external fun nativeSwapTemplateSetOrder(idA: Long, orderA: Int, idB: Long, orderB: Int)
     private external fun nativeStartWorkoutFromTemplate(templateId: Long, name: String): Long

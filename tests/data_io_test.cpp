@@ -48,10 +48,12 @@ TEST_F(DataIOTest, RoundTrip) {
     sf::WorkoutTemplate t; t.name = "Push";
     int64_t tid = f.repo.create_template(t);
     sf::TemplateSet ts; ts.template_id = tid; ts.exercise_id = eid; ts.set_order = 1; ts.reps = 8;
+    ts.duration_secs = 45; ts.rest_secs = 60;
     f.repo.add_template_set(ts);
 
     int64_t wid = f.repo.start_workout("Test");
     sf::WorkoutSet ws; ws.workout_id = wid; ws.exercise_id = eid; ws.set_order = 1; ws.reps = 5; ws.weight = 100.0;
+    ws.duration_secs = 30; ws.rest_secs = 90;
     f.repo.add_set(ws);
     f.repo.finish_workout(wid);
 
@@ -71,9 +73,42 @@ TEST_F(DataIOTest, RoundTrip) {
     auto templates = f2.repo.list_templates();
     ASSERT_EQ(templates.size(), 1u);
     EXPECT_EQ(templates[0].name, "Push");
+    auto tsets = f2.repo.get_template_sets(templates[0].id);
+    ASSERT_EQ(tsets.size(), 1u);
+    EXPECT_EQ(tsets[0].duration_secs, 45);
+    EXPECT_EQ(tsets[0].rest_secs, 60);
 
     auto workouts = f2.repo.list_workouts();
     ASSERT_EQ(workouts.size(), 1u);
+    auto wsets = f2.repo.get_sets_for_workout(workouts[0].id);
+    ASSERT_EQ(wsets.size(), 1u);
+    EXPECT_EQ(wsets[0].duration_secs, 30);
+    EXPECT_EQ(wsets[0].rest_secs, 90);
+}
+
+TEST_F(DataIOTest, ImportWithoutTimingFieldsLeavesNull) {
+    sf::Exercise ex; ex.name = "Bench";
+    f.repo.add_exercise(ex);
+
+    std::string json = R"({
+        "exercises": [
+            {"id": 1, "name": "Bench", "category": "", "muscleGroup": "", "type": "weight"}
+        ],
+        "workouts": [
+            {"id": 1, "name": "W", "startedAt": "", "finishedAt": "", "sets": [
+                {"exerciseId": 1, "order": 1, "reps": 5, "weight": 100, "rpe": 0}
+            ]}
+        ],
+        "templates": []
+    })";
+
+    sf::import_from_json(f.repo, json);
+    auto workouts = f.repo.list_workouts();
+    ASSERT_EQ(workouts.size(), 1u);
+    auto sets = f.repo.get_sets_for_workout(workouts[0].id);
+    ASSERT_EQ(sets.size(), 1u);
+    EXPECT_FALSE(sets[0].duration_secs.has_value());
+    EXPECT_FALSE(sets[0].rest_secs.has_value());
 }
 
 TEST_F(DataIOTest, PreviewImport) {

@@ -128,6 +128,8 @@ fun HistoryScreen() {
                                                 buildString {
                                                     if (set.reps > 0) append("${set.reps} reps")
                                                     if (set.weight > 0) append(" × ${"%.1f".format(AppSettings.toDisplayWeight(set.weight, context))} $weightUnit")
+                                                    if (set.durationSecs > 0) { if (isNotEmpty()) append(" • "); append("${set.durationSecs}s") }
+                                                    if (set.restSecs > 0) { if (isNotEmpty()) append(" • "); append("rest ${set.restSecs}s") }
                                                     if (set.rpe > 0) append(" @${set.rpe}")
                                                 },
                                                 style = MaterialTheme.typography.bodyMedium

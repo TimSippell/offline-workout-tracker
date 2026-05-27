@@ -24,6 +24,7 @@ struct WorkoutSet {
     std::optional<double> weight;
     std::optional<double> rpe;
     std::optional<int> rest_secs;
+    std::optional<int> duration_secs;
     std::string tempo;
     std::string notes;
 };
@@ -62,6 +63,7 @@ struct TemplateSet {
     std::optional<double> weight;
     std::optional<double> rpe;
     std::optional<int> rest_secs;
+    std::optional<int> duration_secs;
     std::string tempo;
     std::string notes;
 };

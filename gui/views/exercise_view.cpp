@@ -6,14 +6,45 @@
 
 namespace gui {
 
-static const char* categories[] = {"", "compound", "isolation", "cardio", "bodyweight"};
-static const char* muscle_groups[] = {"", "chest", "back", "legs", "shoulders", "arms", "core", "fullbody"};
+static const char* categories[] = {"", "Barbell", "Dumbbell", "Machine", "Cable", "Bodyweight", "Cardio"};
+static const char* muscle_groups[] = {"", "Chest", "Back", "Legs", "Shoulders", "Arms", "Core", "Cardio"};
 static const char* tracking_types[] = {"weight", "time"};
 
-static int find_index(const char** arr, int count, const std::string& val) {
-    for (int i = 0; i < count; i++)
-        if (val == arr[i]) return i;
-    return 0;
+static std::string capitalize(const char* s) {
+    std::string r(s);
+    if (!r.empty()) r[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(r[0])));
+    return r;
+}
+
+static bool combo_capitalized(const char* label, int* current, const char** items, int count) {
+    auto getter = [](void* data, int idx) -> const char* {
+        static thread_local std::string buf;
+        buf = capitalize(static_cast<const char**>(data)[idx]);
+        return buf.c_str();
+    };
+    return ImGui::Combo(label, current, getter, (void*)items, count);
+}
+
+static void editable_combo(const char* label, char* buf, int buf_size, const char** suggestions, int count) {
+    ImGui::InputText(label, buf, buf_size);
+    if (ImGui::BeginPopupContextItem(nullptr, ImGuiPopupFlags_None)) {
+        ImGui::EndPopup();
+    }
+    std::string lower_input(buf);
+    for (auto& c : lower_input) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    if (ImGui::BeginListBox(("##" + std::string(label) + "_suggestions").c_str(), ImVec2(-FLT_MIN, 0))) {
+        for (int i = 1; i < count; i++) {
+            std::string item_lower(suggestions[i]);
+            for (auto& c : item_lower) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            if (!lower_input.empty() && item_lower.find(lower_input) == std::string::npos) continue;
+            std::string display = capitalize(suggestions[i]);
+            if (ImGui::Selectable(display.c_str())) {
+                std::strncpy(buf, suggestions[i], buf_size - 1);
+                buf[buf_size - 1] = '\0';
+            }
+        }
+        ImGui::EndListBox();
+    }
 }
 
 ExerciseView::ExerciseView(sf::Repository& repo) : repo_(repo) {}
@@ -33,12 +64,14 @@ void ExerciseView::render() {
     }
 
     ImGui::SameLine();
+    ImGui::TextUnformatted("|");
+    ImGui::SameLine();
     if (ImGui::Button("Add")) {
         show_add_ = true;
         open_add_ = true;
         std::memset(add_name_, 0, sizeof(add_name_));
-        add_category_ = 0;
-        add_muscle_ = 0;
+        std::memset(add_category_, 0, sizeof(add_category_));
+        std::memset(add_muscle_, 0, sizeof(add_muscle_));
         add_tracking_ = 0;
     }
 
@@ -94,8 +127,10 @@ void ExerciseView::render() {
                 edit_exercise_ = ex;
                 std::strncpy(edit_name_, ex.name.c_str(), sizeof(edit_name_) - 1);
                 edit_name_[sizeof(edit_name_) - 1] = '\0';
-                edit_category_ = find_index(categories, IM_ARRAYSIZE(categories), ex.category);
-                edit_muscle_ = find_index(muscle_groups, IM_ARRAYSIZE(muscle_groups), ex.muscle_group);
+                std::strncpy(edit_category_, ex.category.c_str(), sizeof(edit_category_) - 1);
+                edit_category_[sizeof(edit_category_) - 1] = '\0';
+                std::strncpy(edit_muscle_, ex.muscle_group.c_str(), sizeof(edit_muscle_) - 1);
+                edit_muscle_[sizeof(edit_muscle_) - 1] = '\0';
                 edit_tracking_ = (ex.notes == "time") ? 1 : 0;
                 show_edit_ = true;
                 open_edit_ = true;
@@ -124,20 +159,20 @@ void ExerciseView::render_add_popup() {
 
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(400, 290));
+    ImGui::SetNextWindowSize(ImVec2(400, 550));
 
     if (ImGui::BeginPopupModal("Add Exercise", &show_add_, ImGuiWindowFlags_NoResize)) {
         ImGui::InputText("Name", add_name_, sizeof(add_name_));
-        ImGui::Combo("Category", &add_category_, categories, IM_ARRAYSIZE(categories));
-        ImGui::Combo("Muscle Group", &add_muscle_, muscle_groups, IM_ARRAYSIZE(muscle_groups));
-        ImGui::Combo("Tracking", &add_tracking_, tracking_types, IM_ARRAYSIZE(tracking_types));
+        editable_combo("Category", add_category_, sizeof(add_category_), categories, IM_ARRAYSIZE(categories));
+        editable_combo("Muscle Group", add_muscle_, sizeof(add_muscle_), muscle_groups, IM_ARRAYSIZE(muscle_groups));
+        combo_capitalized("Tracking", &add_tracking_, tracking_types, IM_ARRAYSIZE(tracking_types));
 
         ImGui::Spacing();
         if (ImGui::Button("Save", ImVec2(120, 0)) && add_name_[0] != '\0') {
             sf::Exercise ex;
             ex.name = add_name_;
-            ex.category = categories[add_category_];
-            ex.muscle_group = muscle_groups[add_muscle_];
+            ex.category = add_category_;
+            ex.muscle_group = add_muscle_;
             ex.notes = tracking_types[add_tracking_];
             repo_.add_exercise(ex);
             needs_refresh_ = true;
@@ -163,19 +198,19 @@ void ExerciseView::render_edit_popup() {
 
     ImVec2 center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(400, 290));
+    ImGui::SetNextWindowSize(ImVec2(400, 550));
 
     if (ImGui::BeginPopupModal("Edit Exercise", &show_edit_, ImGuiWindowFlags_NoResize)) {
         ImGui::InputText("Name", edit_name_, sizeof(edit_name_));
-        ImGui::Combo("Category", &edit_category_, categories, IM_ARRAYSIZE(categories));
-        ImGui::Combo("Muscle Group", &edit_muscle_, muscle_groups, IM_ARRAYSIZE(muscle_groups));
-        ImGui::Combo("Tracking", &edit_tracking_, tracking_types, IM_ARRAYSIZE(tracking_types));
+        editable_combo("Category", edit_category_, sizeof(edit_category_), categories, IM_ARRAYSIZE(categories));
+        editable_combo("Muscle Group", edit_muscle_, sizeof(edit_muscle_), muscle_groups, IM_ARRAYSIZE(muscle_groups));
+        combo_capitalized("Tracking", &edit_tracking_, tracking_types, IM_ARRAYSIZE(tracking_types));
 
         ImGui::Spacing();
         if (ImGui::Button("Save", ImVec2(120, 0)) && edit_name_[0] != '\0') {
             edit_exercise_.name = edit_name_;
-            edit_exercise_.category = categories[edit_category_];
-            edit_exercise_.muscle_group = muscle_groups[edit_muscle_];
+            edit_exercise_.category = edit_category_;
+            edit_exercise_.muscle_group = edit_muscle_;
             edit_exercise_.notes = tracking_types[edit_tracking_];
             repo_.update_exercise(edit_exercise_);
             needs_refresh_ = true;
