@@ -152,6 +152,33 @@ TEST_F(DataIOTest, ImportDeduplicatesExercises) {
     EXPECT_EQ(exercises.size(), 1u);
 }
 
+TEST_F(DataIOTest, ImportDeduplicatesTemplates) {
+    sf::Exercise ex; ex.name = "Bench";
+    int64_t eid = f.repo.add_exercise(ex);
+
+    sf::WorkoutTemplate t; t.name = "Push Day";
+    int64_t tid = f.repo.create_template(t);
+    sf::TemplateSet ts; ts.template_id = tid; ts.exercise_id = eid; ts.set_order = 1; ts.reps = 8;
+    f.repo.add_template_set(ts);
+
+    std::string json = R"({
+        "exercises": [
+            {"id": 1, "name": "Bench", "category": "", "muscleGroup": "", "type": "weight"}
+        ],
+        "workouts": [],
+        "templates": [
+            {"id": 1, "name": "Push Day", "sets": [
+                {"exerciseId": 1, "order": 1, "reps": 8, "weight": 0, "rpe": 0, "durationSecs": 0, "restSecs": 0}
+            ]}
+        ]
+    })";
+
+    auto result = sf::import_from_json(f.repo, json);
+    EXPECT_EQ(result.templates, 0);
+    auto templates = f.repo.list_templates();
+    EXPECT_EQ(templates.size(), 1u);
+}
+
 TEST_F(DataIOTest, ImportUnknownExerciseIdSkipsSet) {
     std::string json = R"({
         "exercises": [],

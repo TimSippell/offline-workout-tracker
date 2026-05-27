@@ -254,6 +254,9 @@ JNIEXPORT jobjectArray JNICALL
 Java_com_timsippell_swt_bridge_SwtBridge_nativeListTemplates(JNIEnv* env, jobject) {
     if (!g_repo) return nullptr;
     auto templates = g_repo->list_templates();
+    for (auto& t : templates) {
+        t.sets = g_repo->get_template_sets(t.id);
+    }
 
     jclass cls = env->FindClass("com/timsippell/swt/bridge/SwtBridge$WorkoutTemplate");
     jobjectArray arr = env->NewObjectArray(templates.size(), cls, nullptr);

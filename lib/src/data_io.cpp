@@ -375,10 +375,19 @@ ImportResult import_from_json(Repository& repo, const std::string& json) {
         result.workouts++;
     }
 
+    auto existing_templates = repo.list_templates();
+    std::map<std::string, int64_t> existing_template_map;
+    for (auto& et : existing_templates) existing_template_map[et.name] = et.id;
+
     for (auto& t : root.get_array("templates")) {
+        auto tname = t.get_string("name");
+        auto tmpl_it = existing_template_map.find(tname);
+        if (tmpl_it != existing_template_map.end()) continue;
+
         WorkoutTemplate wt;
-        wt.name = t.get_string("name");
+        wt.name = tname;
         int64_t template_id = repo.create_template(wt);
+        existing_template_map[tname] = template_id;
 
         for (auto& s : t.get_array("sets")) {
             int64_t old_exercise_id = s.get_int("exerciseId");
