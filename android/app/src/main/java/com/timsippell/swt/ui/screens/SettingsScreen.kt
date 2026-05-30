@@ -69,8 +69,19 @@ fun SettingsScreen(onNavigateToSetup: () -> Unit = {}, onNavigateToShare: () -> 
     ) { uri ->
         if (uri != null) {
             try {
+                val maxImportSize = 50L * 1024 * 1024
                 val json = context.contentResolver.openInputStream(uri)?.use { stream ->
-                    stream.bufferedReader().readText()
+                    val reader = stream.bufferedReader()
+                    val buf = CharArray(8192)
+                    val sb = StringBuilder()
+                    var total = 0L
+                    var n: Int
+                    while (reader.read(buf).also { n = it } != -1) {
+                        total += n
+                        if (total > maxImportSize) throw Exception("File too large (max 50 MB)")
+                        sb.append(buf, 0, n)
+                    }
+                    sb.toString()
                 } ?: throw Exception("Could not read file")
                 val summary = previewImport(json)
                 pendingImportJson = json

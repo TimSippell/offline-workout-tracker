@@ -8,6 +8,7 @@ class WorkoutHceService : HostApduService() {
 
     companion object {
         val sessionId = AtomicReference<String>(null)
+        val sharedSecret = AtomicReference<ByteArray>(null)
         val tapDetected = AtomicReference(false)
 
         private val SELECT_AID = byteArrayOf(
@@ -33,8 +34,9 @@ class WorkoutHceService : HostApduService() {
             && commandApdu[3] == GET_DATA_HEADER[3]
         ) {
             val id = sessionId.get() ?: return SW_NOT_FOUND
+            val secret = sharedSecret.get() ?: return SW_NOT_FOUND
             tapDetected.set(true)
-            return id.toByteArray(Charsets.UTF_8) + SW_OK
+            return id.toByteArray(Charsets.UTF_8) + secret + SW_OK
         }
         return SW_NOT_FOUND
     }
