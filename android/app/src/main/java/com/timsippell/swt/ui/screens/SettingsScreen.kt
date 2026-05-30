@@ -39,7 +39,7 @@ object AppSettings {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onNavigateToSetup: () -> Unit = {}) {
+fun SettingsScreen(onNavigateToSetup: () -> Unit = {}, onNavigateToShare: () -> Unit = {}) {
     val context = LocalContext.current
     var weightUnit by remember { mutableStateOf(AppSettings.getWeightUnit(context)) }
     var showResetDialog by remember { mutableStateOf(false) }
@@ -143,6 +143,12 @@ fun SettingsScreen(onNavigateToSetup: () -> Unit = {}) {
                 }
                 importMessage?.let {
                     Text(it, style = MaterialTheme.typography.bodySmall)
+                }
+                OutlinedButton(
+                    onClick = onNavigateToShare,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Share via NFC")
                 }
             }
 
