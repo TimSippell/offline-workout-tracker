@@ -71,8 +71,12 @@ fun SwtApp() {
                 composable(Screen.Progress.route) { ProgressScreen() }
                 composable(Screen.Settings.route) {
                     SettingsScreen(
-                        onNavigateToSetup = { navController.navigate("setup") }
+                        onNavigateToSetup = { navController.navigate("setup") },
+                        onNavigateToShare = { navController.navigate("share") }
                     )
+                }
+                composable("share") {
+                    ShareScreen(onNavigateBack = { navController.popBackStack() })
                 }
                 composable("setup") {
                     SetupScreen(onFinish = { navController.popBackStack() })
