@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONArray
 import org.json.JSONObject
+import java.security.SecureRandom
 import java.util.UUID
 
 class ShareSession(private val activity: ComponentActivity) : DefaultLifecycleObserver {
@@ -23,6 +24,7 @@ class ShareSession(private val activity: ComponentActivity) : DefaultLifecycleOb
     private val transferManager = DataTransferManager()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var currentSessionId: String? = null
+    private var currentSecret: ByteArray? = null
     private var currentRole: ShareRole? = null
 
     init {
@@ -37,10 +39,12 @@ class ShareSession(private val activity: ComponentActivity) : DefaultLifecycleOb
     fun startSending(selectedTemplateIds: Set<Long>) {
         currentRole = ShareRole.SEND
         val sessionId = UUID.randomUUID().toString()
+        val secret = ByteArray(32).also { SecureRandom().nextBytes(it) }
         currentSessionId = sessionId
+        currentSecret = secret
         _state.value = ShareState.WaitingForTap
 
-        nfcManager.startAsSender(activity, sessionId)
+        nfcManager.startAsSender(activity, sessionId, secret)
 
         scope.launch {
             val tapDetected = withTimeoutOrNull(120_000L) {
@@ -78,7 +82,7 @@ class ShareSession(private val activity: ComponentActivity) : DefaultLifecycleOb
 
             _state.value = ShareState.Transferring(0f)
             val json = filterExportJson(SwtBridge.exportToJson(), selectedTemplateIds)
-            val result = transferManager.sendData(groupOwnerAddress, sessionId, json) { progress ->
+            val result = transferManager.sendData(groupOwnerAddress, sessionId, secret, json) { progress ->
                 _state.value = ShareState.Transferring(progress)
             }
 
@@ -150,9 +154,12 @@ class ShareSession(private val activity: ComponentActivity) : DefaultLifecycleOb
             }
 
             var receivedSessionId: String? = null
-            nfcManager.startAsReceiver(activity) { sessionId ->
-                receivedSessionId = sessionId
-                currentSessionId = sessionId
+            var receivedSecret: ByteArray? = null
+            nfcManager.startAsReceiver(activity) { payload ->
+                receivedSessionId = payload.sessionId
+                receivedSecret = payload.sharedSecret
+                currentSessionId = payload.sessionId
+                currentSecret = payload.sharedSecret
             }
 
             val sessionReceived = withTimeoutOrNull(120_000L) {
@@ -180,8 +187,16 @@ class ShareSession(private val activity: ComponentActivity) : DefaultLifecycleOb
                 return@launch
             }
 
+            val bindAddress = connectionInfo.groupOwnerAddress
+            if (bindAddress == null) {
+                _state.value = ShareState.Error("Could not determine local address")
+                cleanup()
+                return@launch
+            }
+
+            val secret = receivedSecret!!
             _state.value = ShareState.Transferring(0f)
-            val result = transferManager.startServer(sessionId) { progress ->
+            val result = transferManager.startServer(bindAddress, sessionId, secret) { progress ->
                 _state.value = ShareState.Transferring(progress)
             }
 
@@ -234,6 +249,8 @@ class ShareSession(private val activity: ComponentActivity) : DefaultLifecycleOb
         wifiManager?.teardown()
         wifiManager = null
         currentSessionId = null
+        currentSecret?.fill(0)
+        currentSecret = null
         currentRole = null
     }
 }

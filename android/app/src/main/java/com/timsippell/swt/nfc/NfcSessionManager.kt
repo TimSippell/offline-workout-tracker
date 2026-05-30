@@ -37,13 +37,15 @@ class NfcSessionManager : DefaultLifecycleObserver {
         }
     }
 
-    fun startAsReceiver(activity: Activity, onSessionReceived: (String) -> Unit) {
+    data class NfcPayload(val sessionId: String, val sharedSecret: ByteArray)
+
+    fun startAsReceiver(activity: Activity, onSessionReceived: (NfcPayload) -> Unit) {
         this.activity = activity
         val adapter = NfcAdapter.getDefaultAdapter(activity) ?: return
 
         readerCallback = NfcAdapter.ReaderCallback { tag ->
-            readSessionFromTag(tag)?.let { sessionId ->
-                activity.runOnUiThread { onSessionReceived(sessionId) }
+            readSessionFromTag(tag)?.let { payload ->
+                activity.runOnUiThread { onSessionReceived(payload) }
             }
         }
 
@@ -59,9 +61,10 @@ class NfcSessionManager : DefaultLifecycleObserver {
         isReaderActive = true
     }
 
-    fun startAsSender(activity: Activity, sessionId: String) {
+    fun startAsSender(activity: Activity, sessionId: String, sharedSecret: ByteArray) {
         this.activity = activity
         WorkoutHceService.sessionId.set(sessionId)
+        WorkoutHceService.sharedSecret.set(sharedSecret)
         WorkoutHceService.tapDetected.set(false)
 
         val componentName = ComponentName(activity, WorkoutHceService::class.java)
@@ -90,6 +93,7 @@ class NfcSessionManager : DefaultLifecycleObserver {
             PackageManager.DONT_KILL_APP
         )
         WorkoutHceService.sessionId.set(null)
+        WorkoutHceService.sharedSecret.set(null)
         WorkoutHceService.tapDetected.set(false)
     }
 
@@ -116,7 +120,7 @@ class NfcSessionManager : DefaultLifecycleObserver {
         }
     }
 
-    private fun readSessionFromTag(tag: Tag): String? {
+    private fun readSessionFromTag(tag: Tag): NfcPayload? {
         val isoDep = IsoDep.get(tag) ?: return null
         return try {
             isoDep.connect()
@@ -128,7 +132,11 @@ class NfcSessionManager : DefaultLifecycleObserver {
             val dataResponse = isoDep.transceive(GET_DATA_APDU)
             if (!isSuccess(dataResponse)) return null
 
-            String(dataResponse, 0, dataResponse.size - 2, Charsets.UTF_8)
+            val payloadSize = dataResponse.size - 2
+            if (payloadSize < 36 + 32) return null
+            val sessionId = String(dataResponse, 0, 36, Charsets.UTF_8)
+            val secret = dataResponse.copyOfRange(36, 36 + 32)
+            NfcPayload(sessionId, secret)
         } catch (_: Exception) {
             null
         } finally {

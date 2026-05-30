@@ -51,12 +51,21 @@ JNIEXPORT jlong JNICALL
 Java_com_timsippell_swt_bridge_SwtBridge_nativeAddExercise(JNIEnv* env, jobject,
         jstring name, jstring category, jstring muscleGroup, jstring notes) {
     if (!g_repo) return -1;
+    const char* n = env->GetStringUTFChars(name, nullptr);
+    const char* c = env->GetStringUTFChars(category, nullptr);
+    const char* m = env->GetStringUTFChars(muscleGroup, nullptr);
+    const char* nt = env->GetStringUTFChars(notes, nullptr);
     sf::Exercise ex;
-    ex.name = env->GetStringUTFChars(name, nullptr);
-    ex.category = env->GetStringUTFChars(category, nullptr);
-    ex.muscle_group = env->GetStringUTFChars(muscleGroup, nullptr);
-    ex.notes = env->GetStringUTFChars(notes, nullptr);
-    return g_repo->add_exercise(ex);
+    ex.name = n;
+    ex.category = c;
+    ex.muscle_group = m;
+    ex.notes = nt;
+    auto id = g_repo->add_exercise(ex);
+    env->ReleaseStringUTFChars(name, n);
+    env->ReleaseStringUTFChars(category, c);
+    env->ReleaseStringUTFChars(muscleGroup, m);
+    env->ReleaseStringUTFChars(notes, nt);
+    return id;
 }
 
 JNIEXPORT jobjectArray JNICALL
