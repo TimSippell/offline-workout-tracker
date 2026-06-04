@@ -225,6 +225,7 @@ std::vector<Workout> Repository::list_workouts(int limit, int offset) {
         w.started_at = col_text(raw, 2);
         w.finished_at = col_text(raw, 3);
         w.notes = col_text(raw, 4);
+        w.sets = get_sets_for_workout(w.id);
         result.push_back(std::move(w));
     }
     return result;
