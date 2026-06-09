@@ -40,7 +40,7 @@ fun ProgressScreen() {
                     value = selectedExercise?.name ?: "Select exercise",
                     onValueChange = {},
                     readOnly = true,
-                    modifier = Modifier.fillMaxWidth().menuAnchor(),
+                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
                     label = { Text("Exercise") }
                 )
                 ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {

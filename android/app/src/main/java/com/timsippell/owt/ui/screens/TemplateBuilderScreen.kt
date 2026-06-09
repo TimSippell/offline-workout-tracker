@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -36,7 +36,7 @@ fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
                 title = { Text("Edit Template") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -179,7 +179,7 @@ private fun AddTemplateSetDialog(
                         value = selectedExercise?.name ?: "Select exercise",
                         onValueChange = {},
                         readOnly = true,
-                        modifier = Modifier.menuAnchor(),
+                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
                         label = { Text("Exercise") }
                     )
                     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {

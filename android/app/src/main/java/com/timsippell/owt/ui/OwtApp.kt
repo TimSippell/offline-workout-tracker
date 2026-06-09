@@ -6,9 +6,9 @@ import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -19,10 +19,10 @@ import androidx.navigation.compose.rememberNavController
 import com.timsippell.owt.ui.screens.*
 
 enum class Screen(val route: String, val label: String, val icon: ImageVector) {
-    Exercises("exercises", "Exercises", Icons.Default.List),
+    Exercises("exercises", "Exercises", Icons.AutoMirrored.Filled.List),
     Workout("workout", "Workout", Icons.Default.FitnessCenter),
     History("history", "History", Icons.Default.History),
-    Progress("progress", "Progress", Icons.Default.TrendingUp),
+    Progress("progress", "Progress", Icons.AutoMirrored.Filled.TrendingUp),
     Settings("settings", "Settings", Icons.Default.Settings)
 }
 

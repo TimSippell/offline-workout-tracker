@@ -353,7 +353,7 @@ private fun AddSetDialog(
                     OutlinedTextField(
                         value = exerciseName,
                         onValueChange = { exerciseName = it; expanded = true },
-                        modifier = Modifier.menuAnchor(),
+                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable),
                         label = { Text("Exercise") },
                         singleLine = true
                     )
