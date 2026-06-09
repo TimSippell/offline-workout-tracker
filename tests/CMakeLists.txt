@@ -1,6 +1,6 @@
 find_package(GTest REQUIRED)
 
-add_executable(swt_tests
+add_executable(owt_tests
     calculator_test.cpp
     converter_test.cpp
     repository_test.cpp
@@ -8,7 +8,7 @@ add_executable(swt_tests
     defaults_test.cpp
 )
 
-target_link_libraries(swt_tests PRIVATE swt GTest::gtest GTest::gtest_main)
+target_link_libraries(owt_tests PRIVATE owt GTest::gtest GTest::gtest_main)
 
 include(GoogleTest)
-gtest_discover_tests(swt_tests)
+gtest_discover_tests(owt_tests)

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <swt/calculator.h>
+#include <owt/calculator.h>
 
 TEST(Estimate1RM, EpleyReturnsWeightForSingleRep) {
     EXPECT_DOUBLE_EQ(sf::estimate_1rm_epley(100.0, 1), 100.0);

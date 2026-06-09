@@ -1,4 +1,4 @@
-package com.timsippell.swt.ui.screens
+package com.timsippell.owt.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,7 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.timsippell.swt.bridge.SwtBridge
+import com.timsippell.owt.bridge.OwtBridge
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,8 +26,8 @@ fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
     if (templateId == null) return
 
     val context = LocalContext.current
-    var sets by remember { mutableStateOf(SwtBridge.getTemplateSets(templateId)) }
-    val exercises = remember { SwtBridge.listExercises() }
+    var sets by remember { mutableStateOf(OwtBridge.getTemplateSets(templateId)) }
+    val exercises = remember { OwtBridge.listExercises() }
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -62,17 +62,17 @@ fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
                     isLast = index == sets.size - 1,
                     onMoveUp = {
                         val prev = sets[index - 1]
-                        SwtBridge.swapTemplateSetOrder(set.id, set.order, prev.id, prev.order)
-                        sets = SwtBridge.getTemplateSets(templateId)
+                        OwtBridge.swapTemplateSetOrder(set.id, set.order, prev.id, prev.order)
+                        sets = OwtBridge.getTemplateSets(templateId)
                     },
                     onMoveDown = {
                         val next = sets[index + 1]
-                        SwtBridge.swapTemplateSetOrder(set.id, set.order, next.id, next.order)
-                        sets = SwtBridge.getTemplateSets(templateId)
+                        OwtBridge.swapTemplateSetOrder(set.id, set.order, next.id, next.order)
+                        sets = OwtBridge.getTemplateSets(templateId)
                     },
                     onDelete = {
-                        SwtBridge.deleteTemplateSet(set.id)
-                        sets = SwtBridge.getTemplateSets(templateId)
+                        OwtBridge.deleteTemplateSet(set.id)
+                        sets = OwtBridge.getTemplateSets(templateId)
                     }
                 )
             }
@@ -94,12 +94,12 @@ fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
             onDismiss = { showAddDialog = false },
             onConfirm = { exerciseId, numSets, reps, weight, rpe, durationSecs, restSecs ->
                 for (i in 1..numSets) {
-                    SwtBridge.addTemplateSet(
+                    OwtBridge.addTemplateSet(
                         templateId, exerciseId,
                         sets.size + i, reps, AppSettings.toStorageWeight(weight, context), rpe, durationSecs, restSecs
                     )
                 }
-                sets = SwtBridge.getTemplateSets(templateId)
+                sets = OwtBridge.getTemplateSets(templateId)
                 showAddDialog = false
             }
         )
@@ -109,7 +109,7 @@ fun TemplateBuilderScreen(templateId: Long?, navController: NavController) {
 @Composable
 private fun TemplateSetCard(
     exerciseName: String,
-    set: SwtBridge.TemplateSet,
+    set: OwtBridge.TemplateSet,
     isFirst: Boolean,
     isLast: Boolean,
     onMoveUp: () -> Unit,
@@ -154,7 +154,7 @@ private fun TemplateSetCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddTemplateSetDialog(
-    exercises: List<SwtBridge.Exercise>,
+    exercises: List<OwtBridge.Exercise>,
     onDismiss: () -> Unit,
     onConfirm: (Long, Int, Int, Double, Double, Int, Int) -> Unit
 ) {

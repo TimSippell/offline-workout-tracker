@@ -1,4 +1,4 @@
-package com.timsippell.swt.ui.screens
+package com.timsippell.owt.ui.screens
 
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -9,13 +9,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.timsippell.swt.bridge.SwtBridge
+import com.timsippell.owt.bridge.OwtBridge
 
 object AppSettings {
     private const val KG_TO_LBS = 2.20462
 
-    fun getWeightUnit(context: Context): String = SwtBridge.getWeightUnit()
-    fun setWeightUnit(context: Context, unit: String) = SwtBridge.setWeightUnit(unit)
+    fun getWeightUnit(context: Context): String = OwtBridge.getWeightUnit()
+    fun setWeightUnit(context: Context, unit: String) = OwtBridge.setWeightUnit(unit)
 
     fun toDisplayWeight(storedKg: Double, unit: String): Double =
         if (unit == "lbs") storedKg * KG_TO_LBS else storedKg
@@ -29,12 +29,12 @@ object AppSettings {
     fun toStorageWeight(displayValue: Double, context: Context): Double =
         toStorageWeight(displayValue, getWeightUnit(context))
 
-    fun isSetupComplete(context: Context): Boolean = SwtBridge.isSetupComplete()
-    fun setSetupComplete(context: Context, complete: Boolean) = SwtBridge.setSetupComplete(complete)
+    fun isSetupComplete(context: Context): Boolean = OwtBridge.isSetupComplete()
+    fun setSetupComplete(context: Context, complete: Boolean) = OwtBridge.setSetupComplete(complete)
 
-    fun getOneRepMax(context: Context, exerciseId: Long): Double = SwtBridge.getOneRepMax(exerciseId)
+    fun getOneRepMax(context: Context, exerciseId: Long): Double = OwtBridge.getOneRepMax(exerciseId)
     fun setOneRepMax(context: Context, exerciseId: Long, weight: Double) =
-        SwtBridge.setOneRepMax(exerciseId, weight)
+        OwtBridge.setOneRepMax(exerciseId, weight)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,7 +46,7 @@ fun SettingsScreen(onNavigateToSetup: () -> Unit = {}, onNavigateToShare: () -> 
     var exportMessage by remember { mutableStateOf<String?>(null) }
     var importMessage by remember { mutableStateOf<String?>(null) }
     var pendingImportJson by remember { mutableStateOf<String?>(null) }
-    var importSummary by remember { mutableStateOf<SwtBridge.ImportSummary?>(null) }
+    var importSummary by remember { mutableStateOf<OwtBridge.ImportSummary?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -138,7 +138,7 @@ fun SettingsScreen(onNavigateToSetup: () -> Unit = {}, onNavigateToShare: () -> 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Data", style = MaterialTheme.typography.titleMedium)
                 OutlinedButton(
-                    onClick = { exportLauncher.launch("swt-export.json") },
+                    onClick = { exportLauncher.launch("owt-export.json") },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Export Data")
@@ -189,10 +189,10 @@ fun SettingsScreen(onNavigateToSetup: () -> Unit = {}, onNavigateToShare: () -> 
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val dbFile = context.getDatabasePath("swt.db")
-                        SwtBridge.close()
+                        val dbFile = context.getDatabasePath("owt.db")
+                        OwtBridge.close()
                         dbFile.delete()
-                        SwtBridge.init(context)
+                        OwtBridge.init(context)
                         showResetDialog = false
                     },
                     colors = ButtonDefaults.textButtonColors(
@@ -245,6 +245,6 @@ fun SettingsScreen(onNavigateToSetup: () -> Unit = {}, onNavigateToShare: () -> 
     }
 }
 
-private fun previewImport(json: String): SwtBridge.ImportSummary? = SwtBridge.previewImport(json)
-private fun importDataFromJson(json: String): String = SwtBridge.importFromJson(json)
-private fun exportDataToJson(): String = SwtBridge.exportToJson()
+private fun previewImport(json: String): OwtBridge.ImportSummary? = OwtBridge.previewImport(json)
+private fun importDataFromJson(json: String): String = OwtBridge.importFromJson(json)
+private fun exportDataToJson(): String = OwtBridge.exportToJson()

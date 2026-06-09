@@ -65,9 +65,9 @@ cmake --build "$BUILD_DIR" --parallel "$JOBS"
 
 # --- Result ---
 if [ "$BUILD_GUI" = "ON" ]; then
-    BINARY="$BUILD_DIR/gui/swt-gui"
+    BINARY="$BUILD_DIR/gui/owt-gui"
 else
-    BINARY="$BUILD_DIR/tui/simple-workout-tracker"
+    BINARY="$BUILD_DIR/tui/offline-workout-tracker"
 fi
 
 if [ -f "$BINARY" ]; then

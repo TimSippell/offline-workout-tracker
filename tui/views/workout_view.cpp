@@ -1,6 +1,6 @@
 #include "workout_view.h"
 #include "../widgets/input.h"
-#include <swt/calculator.h>
+#include <owt/calculator.h>
 #include <format>
 
 namespace tui {

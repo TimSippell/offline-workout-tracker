@@ -1,4 +1,4 @@
-package com.timsippell.swt.ui.screens
+package com.timsippell.owt.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -21,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.timsippell.swt.bridge.SwtBridge
+import com.timsippell.owt.bridge.OwtBridge
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -34,7 +34,7 @@ import java.util.Locale
 fun HistoryScreen() {
     val context = LocalContext.current
     val weightUnit = remember { AppSettings.getWeightUnit(context) }
-    var workouts by remember { mutableStateOf(SwtBridge.listWorkouts()) }
+    var workouts by remember { mutableStateOf(OwtBridge.listWorkouts()) }
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
@@ -65,7 +65,7 @@ fun HistoryScreen() {
 
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
-            val exercises = remember { SwtBridge.listExercises() }
+            val exercises = remember { OwtBridge.listExercises() }
             var expandedWorkoutId by remember { mutableStateOf<Long?>(null) }
 
             LazyColumn(
@@ -100,8 +100,8 @@ fun HistoryScreen() {
                                     )
                                 }
                                 IconButton(onClick = {
-                                    SwtBridge.deleteWorkout(workout.id)
-                                    workouts = SwtBridge.listWorkouts()
+                                    OwtBridge.deleteWorkout(workout.id)
+                                    workouts = OwtBridge.listWorkouts()
                                 }) {
                                     Icon(Icons.Default.Delete, contentDescription = "Delete")
                                 }
@@ -109,7 +109,7 @@ fun HistoryScreen() {
 
                             AnimatedVisibility(visible = isExpanded) {
                                 val sets = remember(workout.id) {
-                                    SwtBridge.getSetsForWorkout(workout.id)
+                                    OwtBridge.getSetsForWorkout(workout.id)
                                 }
                                 Column(
                                     modifier = Modifier.padding(top = 12.dp),

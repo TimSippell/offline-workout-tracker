@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "test_helpers.h"
-#include <swt/defaults.h>
+#include <owt/defaults.h>
 
 class DefaultsTest : public ::testing::Test {
 protected:

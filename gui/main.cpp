@@ -20,9 +20,9 @@ static std::string get_db_path(int argc, char* argv[]) {
 #endif
     if (home) {
 #ifdef _WIN32
-        fs::path dir = fs::path(home) / "simple-workout-tracker";
+        fs::path dir = fs::path(home) / "offline-workout-tracker";
 #else
-        fs::path dir = fs::path(home) / ".local" / "share" / "simple-workout-tracker";
+        fs::path dir = fs::path(home) / ".local" / "share" / "offline-workout-tracker";
 #endif
         fs::create_directories(dir);
         return (dir / "workouts.db").string();
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Simple Workout Tracker", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Offline Workout Tracker", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create window" << std::endl;
         glfwTerminate();

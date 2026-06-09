@@ -10,7 +10,7 @@ else()
     find_package(Curses REQUIRED)
 endif()
 
-add_executable(simple-workout-tracker
+add_executable(offline-workout-tracker
     main.cpp
     app.cpp
     views/workout_view.cpp
@@ -24,5 +24,5 @@ add_executable(simple-workout-tracker
     widgets/menu.cpp
 )
 
-target_include_directories(simple-workout-tracker PRIVATE ${CURSES_INCLUDE_DIRS})
-target_link_libraries(simple-workout-tracker PRIVATE swt ${CURSES_LIBRARIES})
+target_include_directories(offline-workout-tracker PRIVATE ${CURSES_INCLUDE_DIRS})
+target_link_libraries(offline-workout-tracker PRIVATE owt ${CURSES_LIBRARIES})

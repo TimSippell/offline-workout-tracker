@@ -14,20 +14,20 @@ fun localProp(env: String, prop: String, default: String = "") =
     System.getenv(env) ?: localProps.getProperty(prop, default)
 
 android {
-    namespace = "com.timsippell.swt"
+    namespace = "com.timsippell.owt"
     compileSdk = 35
 
     signingConfigs {
         create("release") {
-            storeFile = file(localProp("SWT_KEYSTORE_FILE", "swt.keystore.file", "../swt-release.jks"))
-            storePassword = localProp("SWT_KEYSTORE_PASSWORD", "swt.keystore.password")
-            keyAlias = localProp("SWT_KEY_ALIAS", "swt.key.alias", "swt")
-            keyPassword = localProp("SWT_KEY_PASSWORD", "swt.key.password")
+            storeFile = file(localProp("OWT_KEYSTORE_FILE", "owt.keystore.file", "../owt-release.jks"))
+            storePassword = localProp("OWT_KEYSTORE_PASSWORD", "owt.keystore.password")
+            keyAlias = localProp("OWT_KEY_ALIAS", "owt.key.alias", "owt")
+            keyPassword = localProp("OWT_KEY_PASSWORD", "owt.key.password")
         }
     }
 
     defaultConfig {
-        applicationId = "com.timsippell.swt"
+        applicationId = "com.timsippell.owt"
         minSdk = 26
         targetSdk = 35
         versionCode = 5
@@ -76,7 +76,7 @@ android {
     applicationVariants.all {
         outputs.all {
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
-                "simple-workout-tracker-${versionName}-${name}.apk"
+                "offline-workout-tracker-${versionName}-${name}.apk"
         }
     }
 }

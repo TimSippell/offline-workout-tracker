@@ -1,4 +1,4 @@
-package com.timsippell.swt.ui.screens
+package com.timsippell.owt.ui.screens
 
 import android.Manifest
 import android.content.Context
@@ -26,10 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.timsippell.swt.bridge.SwtBridge
-import com.timsippell.swt.nfc.NfcSessionManager
-import com.timsippell.swt.p2p.ShareSession
-import com.timsippell.swt.p2p.ShareState
+import com.timsippell.owt.bridge.OwtBridge
+import com.timsippell.owt.nfc.NfcSessionManager
+import com.timsippell.owt.p2p.ShareSession
+import com.timsippell.owt.p2p.ShareState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -225,7 +225,7 @@ private fun SelectWorkoutsContent(
     onConfirm: (Set<Long>) -> Unit,
     onCancel: () -> Unit
 ) {
-    val templates = remember { SwtBridge.listTemplates() }
+    val templates = remember { OwtBridge.listTemplates() }
     val selectedIds = remember { mutableStateMapOf<Long, Boolean>() }
 
     LaunchedEffect(templates) {
@@ -374,7 +374,7 @@ private fun TransferringContent(progress: Float) {
 
 @Composable
 private fun ReviewingImportContent(
-    summary: SwtBridge.ImportSummary,
+    summary: OwtBridge.ImportSummary,
     onConfirm: () -> Unit,
     onCancel: () -> Unit
 ) {

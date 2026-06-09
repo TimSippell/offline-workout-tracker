@@ -1,4 +1,4 @@
-# Simple Workout Tracker
+# Offline Workout Tracker
 
 A minimal, offline-first workout tracker. Built with a shared C++ core library, an Android app (Kotlin/Jetpack Compose), and a cross-platform desktop GUI (ImGui).
 

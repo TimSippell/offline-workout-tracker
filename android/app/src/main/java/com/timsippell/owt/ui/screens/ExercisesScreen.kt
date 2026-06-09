@@ -1,4 +1,4 @@
-package com.timsippell.swt.ui.screens
+package com.timsippell.owt.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,15 +13,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
-import com.timsippell.swt.bridge.SwtBridge
+import com.timsippell.owt.bridge.OwtBridge
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExercisesScreen(onNavigateToSetup: () -> Unit = {}) {
     val context = LocalContext.current
-    var exercises by remember { mutableStateOf(SwtBridge.listExercises()) }
+    var exercises by remember { mutableStateOf(OwtBridge.listExercises()) }
     var showAddDialog by remember { mutableStateOf(false) }
-    var editingExercise by remember { mutableStateOf<SwtBridge.Exercise?>(null) }
+    var editingExercise by remember { mutableStateOf<OwtBridge.Exercise?>(null) }
     var showSeedDialog by remember { mutableStateOf(exercises.isEmpty()) }
     var showSetupDialog by remember { mutableStateOf(false) }
 
@@ -43,8 +43,8 @@ fun ExercisesScreen(onNavigateToSetup: () -> Unit = {}) {
                     exercise = exercise,
                     onClick = { editingExercise = exercise },
                     onDelete = {
-                        SwtBridge.deleteExercise(exercise.id)
-                        exercises = SwtBridge.listExercises()
+                        OwtBridge.deleteExercise(exercise.id)
+                        exercises = OwtBridge.listExercises()
                     }
                 )
             }
@@ -65,8 +65,8 @@ fun ExercisesScreen(onNavigateToSetup: () -> Unit = {}) {
             title = "Add Exercise",
             onDismiss = { showAddDialog = false },
             onConfirm = { name, category, muscle, trackingType ->
-                SwtBridge.addExercise(name, category, muscle, trackingType)
-                exercises = SwtBridge.listExercises()
+                OwtBridge.addExercise(name, category, muscle, trackingType)
+                exercises = OwtBridge.listExercises()
                 showAddDialog = false
             }
         )
@@ -81,8 +81,8 @@ fun ExercisesScreen(onNavigateToSetup: () -> Unit = {}) {
             initialTrackingType = if (exercise.notes == "time") "time" else "weight",
             onDismiss = { editingExercise = null },
             onConfirm = { name, category, muscle, trackingType ->
-                SwtBridge.updateExercise(exercise.id, name, category, muscle, trackingType)
-                exercises = SwtBridge.listExercises()
+                OwtBridge.updateExercise(exercise.id, name, category, muscle, trackingType)
+                exercises = OwtBridge.listExercises()
                 editingExercise = null
             }
         )
@@ -95,8 +95,8 @@ fun ExercisesScreen(onNavigateToSetup: () -> Unit = {}) {
             text = { Text("Would you like to start with a set of common exercises? You can always add, edit, or remove them later.") },
             confirmButton = {
                 TextButton(onClick = {
-                    SwtBridge.seedDefaultExercises()
-                    exercises = SwtBridge.listExercises()
+                    OwtBridge.seedDefaultExercises()
+                    exercises = OwtBridge.listExercises()
                     showSeedDialog = false
                     if (!AppSettings.isSetupComplete(context)) {
                         showSetupDialog = true
@@ -135,7 +135,7 @@ fun ExercisesScreen(onNavigateToSetup: () -> Unit = {}) {
 
 @Composable
 private fun ExerciseCard(
-    exercise: SwtBridge.Exercise,
+    exercise: OwtBridge.Exercise,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {

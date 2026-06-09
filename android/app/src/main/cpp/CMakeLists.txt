@@ -1,32 +1,32 @@
 cmake_minimum_required(VERSION 3.22.1)
-project(swt-android LANGUAGES C CXX)
+project(owt-android LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SWT_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../../../..)
+set(OWT_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../../../..)
 
 # SQLite (bundled for Android)
 add_library(sqlite3 STATIC
-    ${SWT_ROOT}/android/app/src/main/cpp/sqlite3.c
+    ${OWT_ROOT}/android/app/src/main/cpp/sqlite3.c
 )
 target_include_directories(sqlite3 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-# SWT library
-add_library(swt STATIC
-    ${SWT_ROOT}/lib/src/database.cpp
-    ${SWT_ROOT}/lib/src/repository.cpp
-    ${SWT_ROOT}/lib/src/calculator.cpp
-    ${SWT_ROOT}/lib/src/converter.cpp
-    ${SWT_ROOT}/lib/src/defaults.cpp
-    ${SWT_ROOT}/lib/src/data_io.cpp
+# OWT library
+add_library(owt STATIC
+    ${OWT_ROOT}/lib/src/database.cpp
+    ${OWT_ROOT}/lib/src/repository.cpp
+    ${OWT_ROOT}/lib/src/calculator.cpp
+    ${OWT_ROOT}/lib/src/converter.cpp
+    ${OWT_ROOT}/lib/src/defaults.cpp
+    ${OWT_ROOT}/lib/src/data_io.cpp
 )
-target_include_directories(swt PUBLIC ${SWT_ROOT}/lib/include)
-target_link_libraries(swt PUBLIC sqlite3)
+target_include_directories(owt PUBLIC ${OWT_ROOT}/lib/include)
+target_link_libraries(owt PUBLIC sqlite3)
 
 # JNI bridge
-add_library(swt-jni SHARED
-    ${SWT_ROOT}/lib/jni/swt_jni.cpp
+add_library(owt-jni SHARED
+    ${OWT_ROOT}/lib/jni/owt_jni.cpp
 )
-target_link_libraries(swt-jni PRIVATE swt log)
-target_include_directories(swt-jni PRIVATE ${SWT_ROOT}/lib/include)
+target_link_libraries(owt-jni PRIVATE owt log)
+target_include_directories(owt-jni PRIVATE ${OWT_ROOT}/lib/include)

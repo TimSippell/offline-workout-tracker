@@ -1,8 +1,8 @@
 #pragma once
 
 #include <ncurses.h>
-#include <swt/swt.h>
-#include <swt/data_io.h>
+#include <owt/owt.h>
+#include <owt/data_io.h>
 #include <optional>
 #include <string>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <swt/swt.h>
+#include <owt/owt.h>
 #include "views/workout_view.h"
 #include "views/history_view.h"
 #include "views/exercise_view.h"

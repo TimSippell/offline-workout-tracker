@@ -1,4 +1,4 @@
-package com.timsippell.swt.ui
+package com.timsippell.owt.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
@@ -16,7 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.timsippell.swt.ui.screens.*
+import com.timsippell.owt.ui.screens.*
 
 enum class Screen(val route: String, val label: String, val icon: ImageVector) {
     Exercises("exercises", "Exercises", Icons.Default.List),
@@ -28,7 +28,7 @@ enum class Screen(val route: String, val label: String, val icon: ImageVector) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SwtApp() {
+fun OwtApp() {
     val navController = rememberNavController()
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route

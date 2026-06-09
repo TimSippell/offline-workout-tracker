@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <swt/converter.h>
+#include <owt/converter.h>
 
 TEST(Converter, KgToLbs) {
     EXPECT_NEAR(sf::kg_to_lbs(1.0), 2.20462, 0.0001);

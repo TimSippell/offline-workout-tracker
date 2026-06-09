@@ -1,7 +1,7 @@
 #pragma once
 
-#include <swt/database.h>
-#include <swt/repository.h>
+#include <owt/database.h>
+#include <owt/repository.h>
 
 struct TestFixture {
     sf::Database db{":memory:"};

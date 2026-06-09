@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(simple-workout-tracker VERSION 1.2.1 LANGUAGES CXX)
+project(offline-workout-tracker VERSION 1.2.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,7 +26,7 @@ if(BUILD_TESTS)
 endif()
 
 if(BUILD_JNI)
-    add_library(swt-jni SHARED lib/jni/swt_jni.cpp)
-    target_link_libraries(swt-jni PRIVATE swt)
-    target_include_directories(swt-jni PRIVATE lib/include)
+    add_library(owt-jni SHARED lib/jni/owt_jni.cpp)
+    target_link_libraries(owt-jni PRIVATE owt)
+    target_include_directories(owt-jni PRIVATE lib/include)
 endif()

@@ -17,9 +17,9 @@ int main(int argc, char* argv[]) {
 #endif
         if (home) {
 #ifdef _WIN32
-            fs::path dir = fs::path(home) / "simple-workout-tracker";
+            fs::path dir = fs::path(home) / "offline-workout-tracker";
 #else
-            fs::path dir = fs::path(home) / ".local" / "share" / "simple-workout-tracker";
+            fs::path dir = fs::path(home) / ".local" / "share" / "offline-workout-tracker";
 #endif
             fs::create_directories(dir);
             db_path = (dir / "workouts.db").string();

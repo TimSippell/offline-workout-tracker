@@ -1,6 +1,6 @@
 find_package(SQLite3 REQUIRED)
 
-add_library(swt STATIC
+add_library(owt STATIC
     src/database.cpp
     src/repository.cpp
     src/calculator.cpp
@@ -9,5 +9,5 @@ add_library(swt STATIC
     src/data_io.cpp
 )
 
-target_include_directories(swt PUBLIC include)
-target_link_libraries(swt PUBLIC SQLite3::SQLite3)
+target_include_directories(owt PUBLIC include)
+target_link_libraries(owt PUBLIC SQLite3::SQLite3)

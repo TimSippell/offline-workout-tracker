@@ -1,6 +1,6 @@
-package com.timsippell.swt
+package com.timsippell.owt
 
-import com.timsippell.swt.ui.screens.parseDate
+import com.timsippell.owt.ui.screens.parseDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

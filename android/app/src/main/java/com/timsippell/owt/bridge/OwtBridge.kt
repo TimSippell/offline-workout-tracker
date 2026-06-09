@@ -1,10 +1,10 @@
-package com.timsippell.swt.bridge
+package com.timsippell.owt.bridge
 
 import android.content.Context
 
-object SwtBridge {
+object OwtBridge {
     init {
-        System.loadLibrary("swt-jni")
+        System.loadLibrary("owt-jni")
     }
 
     data class Exercise(
@@ -80,8 +80,8 @@ object SwtBridge {
     )
 
     fun init(context: Context) {
-        val dbPath = context.getDatabasePath("swt.db").absolutePath
-        context.getDatabasePath("swt.db").parentFile?.mkdirs()
+        val dbPath = context.getDatabasePath("owt.db").absolutePath
+        context.getDatabasePath("owt.db").parentFile?.mkdirs()
         nativeInit(dbPath)
     }
 

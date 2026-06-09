@@ -1,4 +1,4 @@
-package com.timsippell.swt.ui.screens
+package com.timsippell.owt.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,22 +8,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
-import com.timsippell.swt.bridge.SwtBridge
+import com.timsippell.owt.bridge.OwtBridge
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgressScreen() {
     val context = LocalContext.current
     val weightUnit = remember { AppSettings.getWeightUnit(context) }
-    var exercises by remember { mutableStateOf(SwtBridge.listExercises()) }
-    var selectedExercise by remember { mutableStateOf<SwtBridge.Exercise?>(null) }
-    var stats by remember { mutableStateOf<SwtBridge.ExerciseStats?>(null) }
-    var progression by remember { mutableStateOf<List<SwtBridge.ProgressionPoint>>(emptyList()) }
+    var exercises by remember { mutableStateOf(OwtBridge.listExercises()) }
+    var selectedExercise by remember { mutableStateOf<OwtBridge.Exercise?>(null) }
+    var stats by remember { mutableStateOf<OwtBridge.ExerciseStats?>(null) }
+    var progression by remember { mutableStateOf<List<OwtBridge.ProgressionPoint>>(emptyList()) }
 
     LaunchedEffect(selectedExercise) {
         selectedExercise?.let {
-            stats = SwtBridge.getStats(it.id)
-            progression = SwtBridge.getProgression(it.id)
+            stats = OwtBridge.getStats(it.id)
+            progression = OwtBridge.getProgression(it.id)
         }
     }
 

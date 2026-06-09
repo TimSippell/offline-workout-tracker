@@ -1,4 +1,4 @@
-package com.timsippell.swt.nfc
+package com.timsippell.owt.nfc
 
 import android.nfc.cardemulation.HostApduService
 import android.os.Bundle

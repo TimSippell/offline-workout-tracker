@@ -1,6 +1,6 @@
-package com.timsippell.swt
+package com.timsippell.owt
 
-import com.timsippell.swt.ui.screens.AppSettings
+import com.timsippell.owt.ui.screens.AppSettings
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

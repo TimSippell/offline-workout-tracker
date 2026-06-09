@@ -1,24 +1,24 @@
-package com.timsippell.swt
+package com.timsippell.owt
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.timsippell.swt.bridge.SwtBridge
-import com.timsippell.swt.ui.SwtApp
+import com.timsippell.owt.bridge.OwtBridge
+import com.timsippell.owt.ui.OwtApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        SwtBridge.init(applicationContext)
+        OwtBridge.init(applicationContext)
         enableEdgeToEdge()
         setContent {
-            SwtApp()
+            OwtApp()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        SwtBridge.close()
+        OwtBridge.close()
     }
 }

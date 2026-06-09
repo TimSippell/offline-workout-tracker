@@ -1,7 +1,7 @@
 #include "exercise_view.h"
 #include "../widgets/input.h"
 #include "../widgets/table.h"
-#include <swt/calculator.h>
+#include <owt/calculator.h>
 #include <format>
 
 namespace tui {

@@ -1,4 +1,4 @@
-package com.timsippell.swt.p2p
+package com.timsippell.owt.p2p
 
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver

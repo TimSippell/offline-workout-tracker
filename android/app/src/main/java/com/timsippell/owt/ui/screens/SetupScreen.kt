@@ -1,4 +1,4 @@
-package com.timsippell.swt.ui.screens
+package com.timsippell.owt.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,14 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.timsippell.swt.bridge.SwtBridge
+import com.timsippell.owt.bridge.OwtBridge
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupScreen(onFinish: () -> Unit) {
     val context = LocalContext.current
     val weightUnit = remember { AppSettings.getWeightUnit(context) }
-    val exercises = remember { SwtBridge.listExercises().filter { it.notes != "time" } }
+    val exercises = remember { OwtBridge.listExercises().filter { it.notes != "time" } }
     val values = remember {
         mutableStateMapOf<Long, String>().apply {
             exercises.forEach { ex ->

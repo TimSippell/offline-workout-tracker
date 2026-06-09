@@ -8,7 +8,7 @@
 #include "views/progress_view.h"
 #include "views/template_view.h"
 #include "views/data_view.h"
-#include <swt/defaults.h>
+#include <owt/defaults.h>
 #include <format>
 
 namespace tui {
@@ -46,7 +46,7 @@ void App::shutdown_ncurses() {
 
 void App::draw_header(const std::string& title) {
     attron(COLOR_PAIR(1) | A_BOLD);
-    mvprintw(0, 0, " SIMPLE-WORKOUT-TRACKER ");
+    mvprintw(0, 0, " OFFLINE-WORKOUT-TRACKER ");
     attroff(COLOR_PAIR(1) | A_BOLD);
     mvprintw(0, 25, "| %s", title.c_str());
 

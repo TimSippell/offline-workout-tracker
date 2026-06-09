@@ -1,6 +1,6 @@
 #pragma once
 
-#include <swt/swt.h>
+#include <owt/owt.h>
 #include <ncurses.h>
 
 namespace tui {

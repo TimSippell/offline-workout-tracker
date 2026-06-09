@@ -1,4 +1,4 @@
-package com.timsippell.swt.ui.screens
+package com.timsippell.owt.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -20,28 +20,28 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.timsippell.swt.bridge.SwtBridge
+import com.timsippell.owt.bridge.OwtBridge
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutScreen(navController: NavController) {
     val context = LocalContext.current
     val weightUnit = remember { AppSettings.getWeightUnit(context) }
-    val restored = remember { SwtBridge.getActiveWorkout() }
+    val restored = remember { OwtBridge.getActiveWorkout() }
     var activeWorkoutId by remember { mutableStateOf(restored?.id) }
     var sets by remember { mutableStateOf(
-        restored?.let { SwtBridge.getSetsForWorkout(it.id) } ?: emptyList()
+        restored?.let { OwtBridge.getSetsForWorkout(it.id) } ?: emptyList()
     ) }
-    var exercises by remember { mutableStateOf(SwtBridge.listExercises()) }
+    var exercises by remember { mutableStateOf(OwtBridge.listExercises()) }
     var showAddSet by remember { mutableStateOf(false) }
     var showTemplatePicker by remember { mutableStateOf(false) }
-    var editingSet by remember { mutableStateOf<SwtBridge.WorkoutSet?>(null) }
+    var editingSet by remember { mutableStateOf<OwtBridge.WorkoutSet?>(null) }
     var completedSets by remember { mutableStateOf(setOf<Long>()) }
     var showCancelDialog by remember { mutableStateOf(false) }
     var showFinishDialog by remember { mutableStateOf(false) }
 
     fun refreshSets() {
-        activeWorkoutId?.let { sets = SwtBridge.getSetsForWorkout(it) }
+        activeWorkoutId?.let { sets = OwtBridge.getSetsForWorkout(it) }
     }
 
     var showActive by remember { mutableStateOf(activeWorkoutId != null) }
@@ -68,7 +68,7 @@ fun WorkoutScreen(navController: NavController) {
                             if (sets.isNotEmpty() && completedSets.size < sets.size) {
                                 showFinishDialog = true
                             } else {
-                                SwtBridge.finishWorkout(activeWorkoutId!!)
+                                OwtBridge.finishWorkout(activeWorkoutId!!)
                                 activeWorkoutId = null
                                 sets = emptyList()
                                 completedSets = emptySet()
@@ -99,7 +99,7 @@ fun WorkoutScreen(navController: NavController) {
                 if (activeWorkoutId != null) {
                     Button(
                         onClick = {
-                            exercises = SwtBridge.listExercises()
+                            exercises = OwtBridge.listExercises()
                             refreshSets()
                             showActive = true
                         },
@@ -114,8 +114,8 @@ fun WorkoutScreen(navController: NavController) {
                 } else {
                     Button(
                         onClick = {
-                            activeWorkoutId = SwtBridge.startWorkout("")
-                            exercises = SwtBridge.listExercises()
+                            activeWorkoutId = OwtBridge.startWorkout("")
+                            exercises = OwtBridge.listExercises()
                             showActive = true
                         },
                         modifier = Modifier.fillMaxWidth()
@@ -181,7 +181,7 @@ fun WorkoutScreen(navController: NavController) {
             text = { Text("This will delete the workout and all its sets. Are you sure?") },
             confirmButton = {
                 TextButton(onClick = {
-                    activeWorkoutId?.let { SwtBridge.deleteWorkout(it) }
+                    activeWorkoutId?.let { OwtBridge.deleteWorkout(it) }
                     activeWorkoutId = null
                     sets = emptyList()
                     completedSets = emptySet()
@@ -206,7 +206,7 @@ fun WorkoutScreen(navController: NavController) {
             text = { Text("$incomplete of ${sets.size} sets not completed. Finish anyway?") },
             confirmButton = {
                 TextButton(onClick = {
-                    SwtBridge.finishWorkout(activeWorkoutId!!)
+                    OwtBridge.finishWorkout(activeWorkoutId!!)
                     activeWorkoutId = null
                     sets = emptyList()
                     completedSets = emptySet()
@@ -225,8 +225,8 @@ fun WorkoutScreen(navController: NavController) {
             exercises = exercises,
             onDismiss = { showAddSet = false },
             onConfirm = { exerciseId, reps, weight, rpe, durationSecs, restSecs ->
-                SwtBridge.addSet(activeWorkoutId!!, exerciseId, sets.size + 1, reps, AppSettings.toStorageWeight(weight, context), rpe, durationSecs, restSecs)
-                exercises = SwtBridge.listExercises()
+                OwtBridge.addSet(activeWorkoutId!!, exerciseId, sets.size + 1, reps, AppSettings.toStorageWeight(weight, context), rpe, durationSecs, restSecs)
+                exercises = OwtBridge.listExercises()
                 refreshSets()
                 showAddSet = false
             }
@@ -237,8 +237,8 @@ fun WorkoutScreen(navController: NavController) {
         TemplatePickerDialog(
             onDismiss = { showTemplatePicker = false },
             onSelect = { templateId ->
-                activeWorkoutId = SwtBridge.startWorkoutFromTemplate(templateId)
-                exercises = SwtBridge.listExercises()
+                activeWorkoutId = OwtBridge.startWorkoutFromTemplate(templateId)
+                exercises = OwtBridge.listExercises()
                 refreshSets()
                 showTemplatePicker = false
                 showActive = true
@@ -252,7 +252,7 @@ fun WorkoutScreen(navController: NavController) {
             exercises = exercises,
             onDismiss = { editingSet = null },
             onConfirm = { reps, weight, rpe, durationSecs, restSecs ->
-                SwtBridge.updateSet(set.id, reps, AppSettings.toStorageWeight(weight, context), rpe, durationSecs, restSecs)
+                OwtBridge.updateSet(set.id, reps, AppSettings.toStorageWeight(weight, context), rpe, durationSecs, restSecs)
                 refreshSets()
                 editingSet = null
             }
@@ -263,8 +263,8 @@ fun WorkoutScreen(navController: NavController) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SetCard(
-    set: SwtBridge.WorkoutSet,
-    exercises: List<SwtBridge.Exercise>,
+    set: OwtBridge.WorkoutSet,
+    exercises: List<OwtBridge.Exercise>,
     weightUnit: String,
     completed: Boolean,
     onClick: () -> Unit,
@@ -313,7 +313,7 @@ private fun SetCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddSetDialog(
-    exercises: List<SwtBridge.Exercise>,
+    exercises: List<OwtBridge.Exercise>,
     onDismiss: () -> Unit,
     onConfirm: (Long, Int, Double, Double, Int, Int) -> Unit
 ) {
@@ -338,7 +338,7 @@ private fun AddSetDialog(
 
     fun resolveExerciseId(): Long {
         if (matchedExercise != null) return matchedExercise.id
-        return SwtBridge.addExercise(exerciseName, "", "", "weight")
+        return OwtBridge.addExercise(exerciseName, "", "", "weight")
     }
 
     AlertDialog(
@@ -394,8 +394,8 @@ private fun AddSetDialog(
 
 @Composable
 private fun EditSetDialog(
-    set: SwtBridge.WorkoutSet,
-    exercises: List<SwtBridge.Exercise>,
+    set: OwtBridge.WorkoutSet,
+    exercises: List<OwtBridge.Exercise>,
     onDismiss: () -> Unit,
     onConfirm: (Int, Double, Double, Int, Int) -> Unit
 ) {
@@ -444,7 +444,7 @@ private fun TemplatePickerDialog(
     onDismiss: () -> Unit,
     onSelect: (Long) -> Unit
 ) {
-    var templates by remember { mutableStateOf(SwtBridge.listTemplates()) }
+    var templates by remember { mutableStateOf(OwtBridge.listTemplates()) }
     var showSeedPrompt by remember { mutableStateOf(templates.isEmpty()) }
 
     if (showSeedPrompt) {
@@ -455,7 +455,7 @@ private fun TemplatePickerDialog(
             confirmButton = {
                 TextButton(onClick = {
                     seedDefaultTemplates()
-                    templates = SwtBridge.listTemplates()
+                    templates = OwtBridge.listTemplates()
                     showSeedPrompt = false
                 }) { Text("Add defaults") }
             },

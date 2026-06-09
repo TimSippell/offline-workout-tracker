@@ -1,10 +1,10 @@
-package com.timsippell.swt.p2p
+package com.timsippell.owt.p2p
 
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.timsippell.swt.bridge.SwtBridge
-import com.timsippell.swt.nfc.NfcSessionManager
+import com.timsippell.owt.bridge.OwtBridge
+import com.timsippell.owt.nfc.NfcSessionManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -81,7 +81,7 @@ class ShareSession(private val activity: ComponentActivity) : DefaultLifecycleOb
             }
 
             _state.value = ShareState.Transferring(0f)
-            val json = filterExportJson(SwtBridge.exportToJson(), selectedTemplateIds)
+            val json = filterExportJson(OwtBridge.exportToJson(), selectedTemplateIds)
             val result = transferManager.sendData(groupOwnerAddress, sessionId, secret, json) { progress ->
                 _state.value = ShareState.Transferring(progress)
             }
@@ -202,7 +202,7 @@ class ShareSession(private val activity: ComponentActivity) : DefaultLifecycleOb
 
             when (result) {
                 is TransferResult.Success -> {
-                    val summary = SwtBridge.previewImport(result.json)
+                    val summary = OwtBridge.previewImport(result.json)
                     if (summary != null) {
                         _state.value = ShareState.ReviewingImport(summary, result.json)
                     } else {
@@ -217,7 +217,7 @@ class ShareSession(private val activity: ComponentActivity) : DefaultLifecycleOb
 
     fun confirmImport(json: String) {
         try {
-            val result = SwtBridge.importFromJson(json)
+            val result = OwtBridge.importFromJson(json)
             _state.value = ShareState.Complete(result)
         } catch (e: Exception) {
             _state.value = ShareState.Error("Import failed: ${e.message}")

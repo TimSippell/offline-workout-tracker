@@ -23,7 +23,7 @@ find_package(OpenGL REQUIRED)
 
 target_link_libraries(imgui PUBLIC glfw OpenGL::GL)
 
-add_executable(swt-gui
+add_executable(owt-gui
     main.cpp
     app.cpp
     theme.cpp
@@ -35,4 +35,4 @@ add_executable(swt-gui
     views/settings_view.cpp
 )
 
-target_link_libraries(swt-gui PRIVATE swt imgui)
+target_link_libraries(owt-gui PRIVATE owt imgui)

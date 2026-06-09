@@ -53,11 +53,11 @@ if errorlevel 1 (
 
 :: --- Result ---
 if "%BUILD_GUI%"=="ON" (
-    set "BINARY=%BUILD_DIR%\gui\%BUILD_TYPE%\swt-gui.exe"
-    if not exist "!BINARY!" set "BINARY=%BUILD_DIR%\gui\swt-gui.exe"
+    set "BINARY=%BUILD_DIR%\gui\%BUILD_TYPE%\owt-gui.exe"
+    if not exist "!BINARY!" set "BINARY=%BUILD_DIR%\gui\owt-gui.exe"
 ) else (
-    set "BINARY=%BUILD_DIR%\tui\%BUILD_TYPE%\simple-workout-tracker.exe"
-    if not exist "!BINARY!" set "BINARY=%BUILD_DIR%\tui\simple-workout-tracker.exe"
+    set "BINARY=%BUILD_DIR%\tui\%BUILD_TYPE%\offline-workout-tracker.exe"
+    if not exist "!BINARY!" set "BINARY=%BUILD_DIR%\tui\offline-workout-tracker.exe"
 )
 
 if exist "%BINARY%" (

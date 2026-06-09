@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SimpleWorkoutTracker"
+rootProject.name = "OfflineWorkoutTracker"
 include(":app")

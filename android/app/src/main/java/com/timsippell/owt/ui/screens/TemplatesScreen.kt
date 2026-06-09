@@ -1,4 +1,4 @@
-package com.timsippell.swt.ui.screens
+package com.timsippell.owt.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,12 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.timsippell.swt.bridge.SwtBridge
+import com.timsippell.owt.bridge.OwtBridge
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TemplatesScreen(navController: NavController) {
-    var templates by remember { mutableStateOf(SwtBridge.listTemplates()) }
+    var templates by remember { mutableStateOf(OwtBridge.listTemplates()) }
     var showCreateDialog by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
@@ -50,8 +50,8 @@ fun TemplatesScreen(navController: NavController) {
                         navController.navigate("template_builder/${template.id}")
                     },
                     onDelete = {
-                        SwtBridge.deleteTemplate(template.id)
-                        templates = SwtBridge.listTemplates()
+                        OwtBridge.deleteTemplate(template.id)
+                        templates = OwtBridge.listTemplates()
                     }
                 )
             }
@@ -67,8 +67,8 @@ fun TemplatesScreen(navController: NavController) {
                             style = MaterialTheme.typography.bodyLarge
                         )
                         OutlinedButton(onClick = {
-                            SwtBridge.seedDefaultTemplates()
-                            templates = SwtBridge.listTemplates()
+                            OwtBridge.seedDefaultTemplates()
+                            templates = OwtBridge.listTemplates()
                         }) {
                             Text("Load recommended templates")
                         }
@@ -82,7 +82,7 @@ fun TemplatesScreen(navController: NavController) {
         CreateTemplateDialog(
             onDismiss = { showCreateDialog = false },
             onConfirm = { name ->
-                val id = SwtBridge.createTemplate(name)
+                val id = OwtBridge.createTemplate(name)
                 showCreateDialog = false
                 navController.navigate("template_builder/$id")
             }
@@ -91,11 +91,11 @@ fun TemplatesScreen(navController: NavController) {
 
 }
 
-internal fun seedDefaultTemplates() = SwtBridge.seedDefaultTemplates()
+internal fun seedDefaultTemplates() = OwtBridge.seedDefaultTemplates()
 
 @Composable
 private fun TemplateCard(
-    template: SwtBridge.WorkoutTemplate,
+    template: OwtBridge.WorkoutTemplate,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
