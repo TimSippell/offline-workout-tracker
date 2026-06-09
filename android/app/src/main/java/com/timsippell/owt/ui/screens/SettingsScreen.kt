@@ -1,6 +1,8 @@
 package com.timsippell.owt.ui.screens
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -160,6 +162,22 @@ fun SettingsScreen(onNavigateToSetup: () -> Unit = {}, onNavigateToShare: () -> 
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Share via NFC")
+                }
+            }
+
+            HorizontalDivider()
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("About", style = MaterialTheme.typography.titleMedium)
+                OutlinedButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://github.com/TimSippell/offline-workout-tracker/blob/main/PRIVACY_POLICY.md"))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Privacy Policy")
                 }
             }
 
