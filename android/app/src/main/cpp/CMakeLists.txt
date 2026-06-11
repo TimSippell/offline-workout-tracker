@@ -30,3 +30,6 @@ add_library(owt-jni SHARED
 )
 target_link_libraries(owt-jni PRIVATE owt log)
 target_include_directories(owt-jni PRIVATE ${OWT_ROOT}/lib/include)
+
+# 16 KB page size support (required by Google Play)
+target_link_options(owt-jni PRIVATE "-Wl,-z,max-page-size=16384")
