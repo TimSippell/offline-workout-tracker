@@ -17,6 +17,7 @@ A minimal, offline-first workout tracker. Built with a shared C++ core library, 
 - Track sets, reps, and weight for each exercise
 - Built-in exercise library with muscle group and equipment tags
 - Create and reuse workout templates
+- Estimated one-rep max (e1RM) using the average of Epley and Brzycki formulas, with RPE adjustment
 - View workout history and progress over time
 - Weight unit conversion (kg/lbs)
 - All data stored locally in SQLite — no account required
