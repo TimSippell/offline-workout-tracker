@@ -350,6 +350,12 @@ ImportResult import_from_json(Repository& repo, const std::string& json) {
         int64_t workout_id = repo.start_workout(name);
         repo.finish_workout(workout_id);
 
+        auto started = wo.get_string("startedAt");
+        auto finished = wo.get_string("finishedAt");
+        if (!started.empty() && !finished.empty()) {
+            repo.set_workout_timestamps(workout_id, started, finished);
+        }
+
         for (auto& s : wo.get_array("sets")) {
             int64_t old_exercise_id = s.get_int("exerciseId");
             auto it = exercise_id_map.find(old_exercise_id);

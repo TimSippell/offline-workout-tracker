@@ -86,6 +86,27 @@ TEST_F(DataIOTest, RoundTrip) {
     EXPECT_EQ(wsets[0].rest_secs, 90);
 }
 
+TEST_F(DataIOTest, ImportPreservesWorkoutTimestamps) {
+    std::string json = R"({
+        "exercises": [
+            {"id": 1, "name": "Squat", "category": "Barbell", "muscleGroup": "Legs", "type": "weight"}
+        ],
+        "workouts": [
+            {"id": 1, "name": "Leg Day", "startedAt": "2024-01-15 09:00:00", "finishedAt": "2024-01-15 10:30:00", "sets": [
+                {"exerciseId": 1, "order": 1, "reps": 5, "weight": 100, "rpe": 0, "durationSecs": 0, "restSecs": 0}
+            ]}
+        ]
+    })";
+
+    auto result = sf::import_from_json(f.repo, json);
+    EXPECT_EQ(result.workouts, 1);
+
+    auto workouts = f.repo.list_workouts();
+    ASSERT_EQ(workouts.size(), 1u);
+    EXPECT_EQ(workouts[0].started_at, "2024-01-15 09:00:00");
+    EXPECT_EQ(workouts[0].finished_at, "2024-01-15 10:30:00");
+}
+
 TEST_F(DataIOTest, ImportWithoutTimingFieldsLeavesNull) {
     sf::Exercise ex; ex.name = "Bench";
     f.repo.add_exercise(ex);

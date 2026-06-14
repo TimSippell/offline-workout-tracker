@@ -28,6 +28,7 @@ public:
     std::optional<Workout> get_active_workout();
     std::vector<Workout> list_workouts(int limit = 20, int offset = 0);
     void update_workout(const Workout& w);
+    void set_workout_timestamps(int64_t id, const std::string& started_at, const std::string& finished_at);
     void delete_workout(int64_t id);
 
     // Sets

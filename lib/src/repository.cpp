@@ -242,6 +242,17 @@ void Repository::update_workout(const Workout& w) {
     sqlite3_step(raw);
 }
 
+void Repository::set_workout_timestamps(int64_t id, const std::string& started_at, const std::string& finished_at) {
+    const char* sql = "UPDATE workout SET started_at=?, finished_at=? WHERE id=?";
+    sqlite3_stmt* raw = nullptr;
+    sqlite3_prepare_v2(db_.handle(), sql, -1, &raw, nullptr);
+    StmtGuard stmt{raw};
+    bind_text(raw, 1, started_at);
+    bind_text(raw, 2, finished_at);
+    sqlite3_bind_int64(raw, 3, id);
+    sqlite3_step(raw);
+}
+
 void Repository::delete_workout(int64_t id) {
     const char* sql = "DELETE FROM workout WHERE id=?";
     sqlite3_stmt* raw = nullptr;
