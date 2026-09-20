@@ -110,8 +110,10 @@ int owt_get_progression(int64_t exercise_id, int sessions, OwtProgressionPoint* 
 int64_t owt_create_template(const char* name, const char* notes);
 int owt_list_templates(OwtWorkoutTemplate* out, int max_count);
 int owt_get_template_sets(int64_t template_id, OwtTemplateSet* out, int max_count);
+void owt_update_template(int64_t id, const char* name, const char* notes);
 void owt_delete_template(int64_t id);
 int64_t owt_add_template_set(int64_t template_id, int64_t exercise_id, int order, int reps, double weight, double rpe, int duration_secs, int rest_secs);
+void owt_update_template_set(int64_t id, int reps, double weight, double rpe, int duration_secs, int rest_secs);
 void owt_delete_template_set(int64_t id);
 void owt_swap_template_set_order(int64_t id_a, int order_a, int64_t id_b, int order_b);
 int64_t owt_start_workout_from_template(int64_t template_id, const char* name);
