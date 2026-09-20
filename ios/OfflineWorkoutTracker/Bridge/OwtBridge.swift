@@ -116,12 +116,20 @@ final class OwtBridge {
         return (0..<Int(count)).map { TemplateSet(from: buffer[$0]) }
     }
 
+    func updateTemplate(id: Int64, name: String, notes: String = "") {
+        owt_update_template(id, name, notes)
+    }
+
     func deleteTemplate(id: Int64) {
         owt_delete_template(id)
     }
 
     func addTemplateSet(templateId: Int64, exerciseId: Int64, order: Int, reps: Int, weight: Double, rpe: Double, durationSecs: Int = 0, restSecs: Int = 0) -> Int64 {
         return owt_add_template_set(templateId, exerciseId, Int32(order), Int32(reps), weight, rpe, Int32(durationSecs), Int32(restSecs))
+    }
+
+    func updateTemplateSet(id: Int64, reps: Int, weight: Double, rpe: Double, durationSecs: Int = 0, restSecs: Int = 0) {
+        owt_update_template_set(id, Int32(reps), weight, rpe, Int32(durationSecs), Int32(restSecs))
     }
 
     func deleteTemplateSet(id: Int64) {

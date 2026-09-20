@@ -237,6 +237,15 @@ int owt_get_template_sets(int64_t template_id, OwtTemplateSet* out, int max_coun
     return count;
 }
 
+void owt_update_template(int64_t id, const char* name, const char* notes) {
+    if (!g_repo) return;
+    sf::WorkoutTemplate t;
+    t.id = id;
+    t.name = name ? name : "";
+    t.notes = notes ? notes : "";
+    g_repo->update_template(t);
+}
+
 void owt_delete_template(int64_t id) {
     if (g_repo) g_repo->delete_template(id);
 }
@@ -253,6 +262,18 @@ int64_t owt_add_template_set(int64_t template_id, int64_t exercise_id, int order
     if (duration_secs > 0) s.duration_secs = duration_secs;
     if (rest_secs > 0) s.rest_secs = rest_secs;
     return g_repo->add_template_set(s);
+}
+
+void owt_update_template_set(int64_t id, int reps, double weight, double rpe, int duration_secs, int rest_secs) {
+    if (!g_repo) return;
+    sf::TemplateSet s;
+    s.id = id;
+    if (reps > 0) s.reps = reps;
+    if (weight > 0) s.weight = weight;
+    if (rpe > 0) s.rpe = rpe;
+    if (duration_secs > 0) s.duration_secs = duration_secs;
+    if (rest_secs > 0) s.rest_secs = rest_secs;
+    g_repo->update_template_set(s);
 }
 
 void owt_delete_template_set(int64_t id) {

@@ -10,10 +10,14 @@ struct WorkoutView: View {
     @State private var showAddSet = false
     @State private var showTemplatePicker = false
     @State private var editingSet: WorkoutSet?
-    @State private var completedSets: Set<Int64> = []
+    @SceneStorage("completedSetIds") private var completedSetIds: String = ""
     @State private var showCancelAlert = false
     @State private var showFinishAlert = false
     @State private var showActive = false
+
+    private var completedSets: Set<Int64> {
+        CompletedSets.decode(completedSetIds)
+    }
 
     var body: some View {
         Group {
@@ -147,11 +151,7 @@ struct WorkoutView: View {
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    if completedSets.contains(set.id) {
-                        completedSets.remove(set.id)
-                    } else {
-                        completedSets.insert(set.id)
-                    }
+                    completedSetIds = CompletedSets.toggle(set.id, in: completedSetIds)
                 }
                 .onLongPressGesture { editingSet = set }
             }
@@ -194,7 +194,7 @@ struct WorkoutView: View {
     private func resetWorkout() {
         activeWorkoutId = nil
         sets = []
-        completedSets = []
+        completedSetIds = ""
         showActive = false
     }
 }

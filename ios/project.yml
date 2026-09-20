@@ -55,8 +55,8 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_STYLE: Automatic
         INFOPLIST_GENERATION_MODE: GeneratedFile
-        MARKETING_VERSION: "1.0.2"
-        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0.3"
+        CURRENT_PROJECT_VERSION: "3"
         HEADER_SEARCH_PATHS:
           - $(SRCROOT)/../lib/include
           - $(SRCROOT)/sqlite3
@@ -71,3 +71,38 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+
+  OfflineWorkoutTrackerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: OfflineWorkoutTrackerTests
+    dependencies:
+      - target: OfflineWorkoutTracker
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.timsippell.owt.tests
+        DEVELOPMENT_TEAM: 429T5NT2M7
+        CODE_SIGN_STYLE: Automatic
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/OfflineWorkoutTracker.app/OfflineWorkoutTracker"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        GENERATE_INFOPLIST_FILE: YES
+        HEADER_SEARCH_PATHS:
+          - $(SRCROOT)/../lib/include
+          - $(SRCROOT)/sqlite3
+          - $(SRCROOT)/OfflineWorkoutTracker/Bridge
+        SWIFT_INCLUDE_PATHS:
+          - $(SRCROOT)/OfflineWorkoutTracker/Bridge
+
+schemes:
+  OfflineWorkoutTracker:
+    build:
+      targets:
+        OfflineWorkoutTracker: all
+        OfflineWorkoutTrackerTests: [test]
+    test:
+      targets:
+        - OfflineWorkoutTrackerTests
+      gatherCoverageData: true
+    run:
+      config: Debug

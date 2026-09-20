@@ -18,24 +18,39 @@ enum Tab: String, CaseIterable {
     }
 }
 
+/// Every modal presented from the tab bar shares one presentation context, so
+/// they must be driven by a single piece of state — stacking `.sheet` modifiers
+/// makes only one of them reachable at a time.
+enum RootSheet: Identifiable {
+    case setup
+    case templates
+    case templateBuilder(Int64)
+
+    var id: String {
+        switch self {
+        case .setup: return "setup"
+        case .templates: return "templates"
+        case .templateBuilder(let id): return "builder-\(id)"
+        }
+    }
+}
+
 struct ContentView: View {
     @State private var selectedTab: Tab = .workout
-    @State private var showSetup = false
-    @State private var showTemplates = false
-    @State private var editingTemplateId: Int64?
+    @State private var sheet: RootSheet?
 
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                ExercisesView(onNavigateToSetup: { showSetup = true })
+                ExercisesView(onNavigateToSetup: { sheet = .setup })
             }
             .tabItem { Label(Tab.exercises.rawValue, systemImage: Tab.exercises.icon) }
             .tag(Tab.exercises)
 
             NavigationStack {
                 WorkoutView(
-                    onManageTemplates: { showTemplates = true },
-                    onEditTemplate: { id in editingTemplateId = id }
+                    onManageTemplates: { sheet = .templates },
+                    onEditTemplate: { id in sheet = .templateBuilder(id) }
                 )
             }
             .tabItem { Label(Tab.workout.rawValue, systemImage: Tab.workout.icon) }
@@ -54,35 +69,24 @@ struct ContentView: View {
             .tag(Tab.progress)
 
             NavigationStack {
-                SettingsView(onNavigateToSetup: { showSetup = true })
+                SettingsView(onNavigateToSetup: { sheet = .setup })
             }
             .tabItem { Label(Tab.settings.rawValue, systemImage: Tab.settings.icon) }
             .tag(Tab.settings)
         }
-        .sheet(isPresented: $showSetup) {
-            NavigationStack {
-                SetupView(onFinish: { showSetup = false })
-            }
-        }
-        .sheet(isPresented: $showTemplates) {
-            NavigationStack {
-                TemplatesView(
-                    onDismiss: { showTemplates = false },
-                    onEditTemplate: { id in editingTemplateId = id }
-                )
-            }
-        }
-        .sheet(item: Binding(
-            get: { editingTemplateId.map { TemplateId(id: $0) } },
-            set: { editingTemplateId = $0?.id }
-        )) { wrapper in
-            NavigationStack {
-                TemplateBuilderView(templateId: wrapper.id, onDismiss: { editingTemplateId = nil })
+        .sheet(item: $sheet) { destination in
+            switch destination {
+            case .setup:
+                NavigationStack {
+                    SetupView(onFinish: { sheet = nil })
+                }
+            case .templates:
+                TemplatesView(onDismiss: { sheet = nil })
+            case .templateBuilder(let id):
+                NavigationStack {
+                    TemplateBuilderView(templateId: id, onDismiss: { sheet = nil })
+                }
             }
         }
     }
-}
-
-struct TemplateId: Identifiable {
-    let id: Int64
 }
