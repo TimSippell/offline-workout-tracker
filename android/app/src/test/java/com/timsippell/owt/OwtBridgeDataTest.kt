@@ -33,7 +33,7 @@ class OwtBridgeDataTest {
 
     @Test
     fun `workout set data class holds values`() {
-        val set = OwtBridge.WorkoutSet(10, 1, 5, 1, 8, 100.0, 8.0)
+        val set = OwtBridge.WorkoutSet(10, 1, 5, 1, 8, 100.0, 8.0, 30, 90)
         assertEquals(10L, set.id)
         assertEquals(1L, set.workoutId)
         assertEquals(5L, set.exerciseId)
@@ -41,6 +41,8 @@ class OwtBridgeDataTest {
         assertEquals(8, set.reps)
         assertEquals(100.0, set.weight, 0.0)
         assertEquals(8.0, set.rpe, 0.0)
+        assertEquals(30, set.durationSecs)
+        assertEquals(90, set.restSecs)
     }
 
     @Test
@@ -55,7 +57,7 @@ class OwtBridgeDataTest {
 
     @Test
     fun `template set data class holds values`() {
-        val ts = OwtBridge.TemplateSet(1, 2, 3, 1, 10, 50.0, 7.0)
+        val ts = OwtBridge.TemplateSet(1, 2, 3, 1, 10, 50.0, 7.0, 45, 120)
         assertEquals(1L, ts.id)
         assertEquals(2L, ts.templateId)
         assertEquals(3L, ts.exerciseId)
@@ -63,6 +65,8 @@ class OwtBridgeDataTest {
         assertEquals(10, ts.reps)
         assertEquals(50.0, ts.weight, 0.0)
         assertEquals(7.0, ts.rpe, 0.0)
+        assertEquals(45, ts.durationSecs)
+        assertEquals(120, ts.restSecs)
     }
 
     @Test

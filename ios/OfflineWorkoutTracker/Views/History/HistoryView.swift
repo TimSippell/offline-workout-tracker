@@ -81,7 +81,7 @@ private struct WorkoutCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(workout.name.isEmpty ? "Workout" : workout.name)
                         .font(.headline)
-                    Text(workout.startedAt)
+                    Text(formatLocal(workout.startedAt))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text("\(workout.setCount) sets")
@@ -279,10 +279,21 @@ private struct CalendarCard: View {
     }
 }
 
+// Timestamps are stored in UTC (SQLite datetime('now')); parse as UTC so
+// Calendar.current maps them onto the device's local day.
 private func parseDate(_ dateStr: String) -> Date? {
     let df = DateFormatter()
+    df.locale = Locale(identifier: "en_US_POSIX")
+    df.timeZone = TimeZone(identifier: "UTC")
     df.dateFormat = "yyyy-MM-dd HH:mm:ss"
     if let d = df.date(from: dateStr) { return d }
+    // Date-only values carry no time, so keep them on the same calendar day.
+    df.timeZone = .current
     df.dateFormat = "yyyy-MM-dd"
     return df.date(from: String(dateStr.prefix(10)))
+}
+
+private func formatLocal(_ dateStr: String) -> String {
+    guard let d = parseDate(dateStr) else { return dateStr }
+    return d.formatted(date: .abbreviated, time: .shortened)
 }

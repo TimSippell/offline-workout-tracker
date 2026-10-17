@@ -24,8 +24,12 @@ import androidx.compose.ui.unit.dp
 import com.timsippell.owt.bridge.OwtBridge
 import com.timsippell.owt.ui.components.EditSetDialog
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import androidx.compose.ui.platform.LocalContext
 import java.util.Locale
@@ -94,7 +98,7 @@ fun HistoryScreen() {
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                     Text(
-                                        workout.startedAt,
+                                        formatLocal(workout.startedAt),
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                     Text(
@@ -288,15 +292,32 @@ private fun CalendarView(
     }
 }
 
-internal fun parseDate(dateStr: String): LocalDate? {
+private val storedFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+// Timestamps are stored in UTC (SQLite datetime('now')); convert to the
+// device's zone so workouts land on the local calendar day.
+private fun parseLocalDateTime(dateStr: String, zone: ZoneId): LocalDateTime? {
     return try {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        LocalDate.parse(dateStr, formatter)
+        LocalDateTime.parse(dateStr, storedFormatter)
+            .atOffset(ZoneOffset.UTC)
+            .atZoneSameInstant(zone)
+            .toLocalDateTime()
     } catch (e: Exception) {
-        try {
-            LocalDate.parse(dateStr.take(10))
-        } catch (e: Exception) {
-            null
-        }
+        null
+    }
+}
+
+private fun formatLocal(dateStr: String): String {
+    val dt = parseLocalDateTime(dateStr, ZoneId.systemDefault()) ?: return dateStr
+    return dt.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT))
+}
+
+internal fun parseDate(dateStr: String, zone: ZoneId = ZoneId.systemDefault()): LocalDate? {
+    parseLocalDateTime(dateStr, zone)?.let { return it.toLocalDate() }
+    // Date-only values carry no time, so keep them on the same calendar day.
+    return try {
+        LocalDate.parse(dateStr.take(10))
+    } catch (e: Exception) {
+        null
     }
 }
