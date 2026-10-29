@@ -1,3 +1,4 @@
+import AudioToolbox
 import SwiftUI
 
 struct WorkoutView: View {
@@ -11,6 +12,9 @@ struct WorkoutView: View {
     @State private var showTemplatePicker = false
     @State private var editingSet: WorkoutSet?
     @SceneStorage("completedSetIds") private var completedSetIds: String = ""
+    @SceneStorage("restEndsAt") private var restEndsAt: Double = 0
+    @SceneStorage("restSetId") private var restSetId: Int = 0
+    @Environment(\.scenePhase) private var scenePhase
     @State private var showCancelAlert = false
     @State private var showFinishAlert = false
     @State private var showActive = false
@@ -151,21 +155,73 @@ struct WorkoutView: View {
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    if completedSets.contains(set.id) {
+                        if Int(set.id) == restSetId { restEndsAt = 0 }
+                    } else if set.restSecs > 0 {
+                        restSetId = Int(set.id)
+                        restEndsAt = Date().timeIntervalSince1970 + Double(set.restSecs)
+                    }
                     completedSetIds = CompletedSets.toggle(set.id, in: completedSetIds)
                 }
                 .onLongPressGesture { editingSet = set }
             }
         }
         .safeAreaInset(edge: .bottom) {
-            Button { showAddSet = true } label: {
-                Label("Add Set", systemImage: "plus.circle.fill")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
+            VStack(spacing: 8) {
+                if restEndsAt > 0 {
+                    restTimerBanner
+                }
+                Button { showAddSet = true } label: {
+                    Label("Add Set", systemImage: "plus.circle.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
             .padding(.horizontal)
             .padding(.bottom, 8)
         }
+        .task(id: restEndsAt) { await runRestTimer() }
+    }
+
+    private var restTimerBanner: some View {
+        let end = Date(timeIntervalSince1970: restEndsAt)
+        return HStack {
+            Label {
+                Text(timerInterval: Date()...max(end, Date()), countsDown: true)
+                    .monospacedDigit()
+            } icon: {
+                Image(systemName: "timer")
+            }
+            .font(.title3.weight(.semibold))
+            Spacer()
+            Button("+15s") { restEndsAt += 15 }
+            Button("Skip") { restEndsAt = 0 }
+        }
+        .buttonStyle(.bordered)
+        .padding(12)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func runRestTimer() async {
+        guard restEndsAt > 0 else { return }
+        let remaining = restEndsAt - Date().timeIntervalSince1970
+        // Already expired (e.g. restored after the app was away): clear silently.
+        guard remaining > 0 else {
+            restEndsAt = 0
+            return
+        }
+        do {
+            try await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+        } catch {
+            return
+        }
+        let justExpired = Date().timeIntervalSince1970 - restEndsAt < 2
+        if justExpired && scenePhase == .active {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            AudioServicesPlaySystemSound(1005)
+        }
+        restEndsAt = 0
     }
 
     private func restoreActiveWorkout() {
@@ -195,6 +251,7 @@ struct WorkoutView: View {
         activeWorkoutId = nil
         sets = []
         completedSetIds = ""
+        restEndsAt = 0
         showActive = false
     }
 }

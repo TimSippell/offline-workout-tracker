@@ -1,5 +1,12 @@
 package com.timsippell.owt.ui.screens
 
+import android.content.Context
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -20,9 +27,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.timsippell.owt.bridge.OwtBridge
 import com.timsippell.owt.ui.components.EditSetDialog
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +50,10 @@ fun WorkoutScreen(navController: NavController) {
     var editingSet by remember { mutableStateOf<OwtBridge.WorkoutSet?>(null) }
     var completedSetIds by rememberSaveable { mutableStateOf("") }
     val completedSets = if (completedSetIds.isEmpty()) emptySet() else completedSetIds.split(",").map { it.toLong() }.toSet()
+    var restEndsAt by rememberSaveable { mutableStateOf(0L) }
+    var restSetId by rememberSaveable { mutableStateOf(0L) }
+    var restRemainingMs by remember { mutableStateOf(0L) }
+    val lifecycleOwner = LocalLifecycleOwner.current
     var showCancelDialog by remember { mutableStateOf(false) }
     var showFinishDialog by remember { mutableStateOf(false) }
 
@@ -48,6 +62,25 @@ fun WorkoutScreen(navController: NavController) {
     }
 
     var showActive by remember { mutableStateOf(activeWorkoutId != null) }
+
+    LaunchedEffect(restEndsAt) {
+        if (restEndsAt == 0L) return@LaunchedEffect
+        // Already expired (e.g. returning from background): clear silently.
+        if (restEndsAt <= System.currentTimeMillis()) {
+            restEndsAt = 0L
+            return@LaunchedEffect
+        }
+        while (true) {
+            restRemainingMs = restEndsAt - System.currentTimeMillis()
+            if (restRemainingMs <= 0) break
+            delay(250)
+        }
+        val justExpired = System.currentTimeMillis() - restEndsAt < 2_000L
+        if (justExpired && lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            playRestDoneAlert(context)
+        }
+        restEndsAt = 0L
+    }
 
     Scaffold(
         topBar = {
@@ -75,6 +108,7 @@ fun WorkoutScreen(navController: NavController) {
                                 activeWorkoutId = null
                                 sets = emptyList()
                                 completedSetIds = ""
+                                restEndsAt = 0L
                                 showActive = false
                             }
                         }) {
@@ -85,6 +119,19 @@ fun WorkoutScreen(navController: NavController) {
                     }
                 }
             )
+        },
+        bottomBar = {
+            if (showActive && activeWorkoutId != null && restEndsAt > 0L) {
+                BottomAppBar {
+                    Text(
+                        "Rest ${formatRest(restRemainingMs)}",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(horizontal = 16.dp).weight(1f)
+                    )
+                    TextButton(onClick = { restEndsAt += 15_000L }) { Text("+15s") }
+                    TextButton(onClick = { restEndsAt = 0L }) { Text("Skip") }
+                }
+            }
         },
         floatingActionButton = {
             if (showActive && activeWorkoutId != null) {
@@ -155,10 +202,17 @@ fun WorkoutScreen(navController: NavController) {
                             weightUnit = weightUnit,
                             completed = set.id in completedSets,
                             onClick = {
-                                val updated = if (set.id in completedSets)
+                                val updated = if (set.id in completedSets) {
+                                    if (set.id == restSetId) restEndsAt = 0L
                                     completedSets - set.id
-                                else
+                                } else {
+                                    if (set.restSecs > 0) {
+                                        restSetId = set.id
+                                        restRemainingMs = set.restSecs * 1000L
+                                        restEndsAt = System.currentTimeMillis() + restRemainingMs
+                                    }
                                     completedSets + set.id
+                                }
                                 completedSetIds = updated.joinToString(",")
                             },
                             onLongClick = { editingSet = set }
@@ -189,6 +243,7 @@ fun WorkoutScreen(navController: NavController) {
                     activeWorkoutId = null
                     sets = emptyList()
                     completedSetIds = ""
+                    restEndsAt = 0L
                     showActive = false
                     showCancelDialog = false
                 },
@@ -214,6 +269,7 @@ fun WorkoutScreen(navController: NavController) {
                     activeWorkoutId = null
                     sets = emptyList()
                     completedSetIds = ""
+                    restEndsAt = 0L
                     showActive = false
                     showFinishDialog = false
                 }) { Text("Finish") }
@@ -261,6 +317,26 @@ fun WorkoutScreen(navController: NavController) {
                 editingSet = null
             }
         )
+    }
+}
+
+internal fun formatRest(ms: Long): String {
+    val totalSecs = ((ms.coerceAtLeast(0) + 999) / 1000).toInt()
+    return "%d:%02d".format(totalSecs / 60, totalSecs % 60)
+}
+
+private fun playRestDoneAlert(context: Context) {
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        context.getSystemService(VibratorManager::class.java)?.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Vibrator::class.java)
+    }
+    vibrator?.vibrate(VibrationEffect.createOneShot(400, VibrationEffect.DEFAULT_AMPLITUDE))
+    runCatching {
+        val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 80)
+        tone.startTone(ToneGenerator.TONE_PROP_BEEP2, 300)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ tone.release() }, 500)
     }
 }
 
